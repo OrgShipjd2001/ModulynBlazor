@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-	<Import Project="..\CM\Version\assemblyversion.props"/>
+	<Import Project="..\CM\Version\assemblyversion.props" />
 	
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\WebServerInterface\WebServerInterface.csproj" />
+    <ProjectReference Include="..\ModulynInterface\ModulynInterface.csproj" />
   </ItemGroup>
 
 </Project>

@@ -47,17 +47,17 @@ echo ^<id^>ModulynServer^</id^> >> %nugetDir%\webserver.nuspec
 echo ^<version^>%version%^</version^> >> %nugetDir%\webserver.nuspec
 echo ^<description^>The Modulyn Server framework^</description^> >> %nugetDir%\webserver.nuspec
 echo ^<authors^>Jared Shipley^</authors^> >> %nugetDir%\webserver.nuspec
-echo ^<repository type="git" url="https://github.com/OrgShipjd2001/ModulynBlazor.git" /^> >> %nugetDir%\interface.nuspec
-echo ^<readme^>docs\README.md^</readme^> >> %nugetDir%\interface.nuspec
-echo ^<dependencies^> >> %nugetDir%\interface.nuspec
-echo ^<group targetFramework=".NET8.0" /^> >> %nugetDir%\interface.nuspec
-echo ^</dependencies^> >> %nugetDir%\interface.nuspec
+echo ^<repository type="git" url="https://github.com/OrgShipjd2001/ModulynBlazor.git" /^> >> %nugetDir%\webserver.nuspec
+echo ^<readme^>docs\README.md^</readme^> >> %nugetDir%\webserver.nuspec
+echo ^<dependencies^> >> %nugetDir%\webserver.nuspec
+echo ^<group targetFramework=".NET8.0" /^> >> %nugetDir%\webserver.nuspec
+echo ^</dependencies^> >> %nugetDir%\webserver.nuspec
 
 echo ^</metadata^> >> %nugetDir%\webserver.nuspec
 echo ^<files^> >> %nugetDir%\webserver.nuspec
 
 echo ^<file src="%targetDir%\ModulynServer\**" target="content"/^> >> %nugetDir%\webserver.nuspec
-echo ^<file src="%rootDir%\README.md" target="docs\" /^> >> %nugetDir%\interface.nuspec
+echo ^<file src="%rootDir%\README.md" target="docs\" /^> >> %nugetDir%\webserver.nuspec
 
 echo ^</files^> >> %nugetDir%\webserver.nuspec
 echo ^</package^> >> %nugetDir%\webserver.nuspec

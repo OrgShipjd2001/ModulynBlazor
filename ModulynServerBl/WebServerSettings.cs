@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Reflection;
 using System.Xml;
 
-namespace WebServerBl
+namespace Modulyn.Server.Bl
 {
     public class WebServerSettings
     {

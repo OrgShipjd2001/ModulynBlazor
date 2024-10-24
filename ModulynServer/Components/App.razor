@@ -1,6 +1,4 @@
 ﻿@using Microsoft.AspNetCore.Components.Web
-@using WebServerInterface
-@using WebServerBl
 @inject WebServerModuleManager ModuleManager
 
 <!DOCTYPE html>
@@ -15,9 +13,9 @@
     <link rel="stylesheet" href="Navigation.css" />
     <link rel="stylesheet" href="WebServer.styles.css" />
 
-    @if (!string.IsNullOrWhiteSpace(WebServerBl.WebServerSettings.Instance.SiteImage))
+    @if (!string.IsNullOrWhiteSpace(WebServerSettings.Instance.SiteImage))
     {
-        <link rel="icon" type="image/png" href="@WebServerBl.WebServerSettings.Instance.SiteImage" />
+        <link rel="icon" type="image/png" href="@WebServerSettings.Instance.SiteImage" />
     }
     else
     {

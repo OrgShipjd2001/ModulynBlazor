@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using WebServerBl;
-using WebServerInterface;
+using Modulyn.Server.Interface;
+using Modulyn.Server.Bl;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
-namespace WebServer.RestApiControllers
+namespace Modulyn.Server.RestApiControllers
 {
     [Route("api/[controller]")]
     [ApiController]

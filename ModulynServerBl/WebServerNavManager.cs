@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using WebServerInterface;
+﻿
+using Modulyn.Server.Interface;
 
-namespace WebServerBl
+namespace Modulyn.Server.Bl
 {
     public class WebServerNavManager
     {

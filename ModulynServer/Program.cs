@@ -1,12 +1,10 @@
 using Microsoft.Extensions.FileProviders;
 using Radzen;
-using System.Collections.Generic;
-using System.Reflection;
-using WebServer.Components;
-using WebServerBl;
-using WebServerInterface;
+using ModulynServer.Components;
+using Modulyn.Server.Bl;
+using Modulyn.Server.Interface;
 
-namespace WebServer
+namespace Modulyn.Server
 {
     public class Program
     {
