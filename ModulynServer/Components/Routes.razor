@@ -1,0 +1,31 @@
+﻿@using System.Reflection
+@using WebServerBl
+@using WebServerInterface
+@inject WebServerModuleManager ModuleManager
+@inject NavigationManager NavigationManager
+
+<CascadingBlazoredModel>
+    <Router 
+            AppAssembly="typeof(Program).Assembly"
+            AdditionalAssemblies="@GetModuleAssemblies()"
+            PreferExactMatches="@true">
+        <Found Context="routeData">
+            <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
+            <FocusOnNavigate RouteData="routeData" Selector="h1" />
+        </Found>
+    </Router>
+</CascadingBlazoredModel>
+
+@code{
+    
+    public List<Assembly> GetModuleAssemblies()
+    {
+        List<Assembly> asmList = new List<Assembly>();
+        foreach(IWebServerModule module in ModuleManager.GetModuleList())
+        {
+            asmList.Add(module.ModuleAssembly);
+        }
+
+        return asmList;
+    }
+}

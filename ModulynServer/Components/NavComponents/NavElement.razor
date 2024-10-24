@@ -1,0 +1,20 @@
+﻿@using WebServerBl
+
+
+<RadzenPanelMenuItem class="item-with-icon" style="background-color:transparent" Text="@NavItem.NavItemName" Path="@NavItem.Target" Image="@NavItem.Icon" @bind-Expanded="NavItem.Expanded">
+
+    <ChildContent>
+        @foreach (var subItem in NavItem.Children)
+        {
+            <NavElement NavItem="@subItem" />
+        }
+    </ChildContent>
+
+</RadzenPanelMenuItem>
+
+
+@code {
+    [Parameter]
+    public WebServerNavItem NavItem{ get; set; }
+
+}
