@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using Modulyn.Server.Interface;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using WebServerInterface;
 
-namespace WebServerBl
+
+namespace Modulyn.Server.Bl
 {
     public class WebServerModuleManager
     {

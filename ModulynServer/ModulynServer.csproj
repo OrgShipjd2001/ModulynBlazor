@@ -14,8 +14,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\WebServerBl\WebServerBl.csproj" />
-    <ProjectReference Include="..\WebServerInterface\WebServerInterface.csproj" />
+    <ProjectReference Include="..\ModulynInterface\ModulynInterface.csproj" />
+    <ProjectReference Include="..\ModulynServerBl\ModulynServerBl.csproj" />
   </ItemGroup>
 
 </Project>
