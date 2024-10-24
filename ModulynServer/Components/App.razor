@@ -1,0 +1,42 @@
+﻿@using Microsoft.AspNetCore.Components.Web
+@using WebServerInterface
+@using WebServerBl
+@inject WebServerModuleManager ModuleManager
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/" />
+    <link rel="stylesheet" href="bootstrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="app.css" />
+    <link rel="stylesheet" href="Navigation.css" />
+    <link rel="stylesheet" href="WebServer.styles.css" />
+
+    @if (!string.IsNullOrWhiteSpace(WebServerBl.WebServerSettings.Instance.SiteImage))
+    {
+        <link rel="icon" type="image/png" href="@WebServerBl.WebServerSettings.Instance.SiteImage" />
+    }
+    else
+    {
+        <link rel="icon" type="image/png" href="webserver.png" />
+    }
+
+    @foreach(IWebServerModule module in ModuleManager.GetModuleList())
+    {
+        <link rel="stylesheet" href="@(module.ModuleId + ".styles.css")" />
+    }
+
+    <RadzenTheme Theme="material" @rendermode="InteractiveServer" />
+    <HeadOutlet @rendermode="RenderMode.InteractiveServer" />
+</head>
+
+<body>
+    <Routes @rendermode="RenderMode.InteractiveServer" />
+    <script src="_framework/blazor.web.js"></script>
+    <script src="_content/Radzen.Blazor/Radzen.Blazor.js?v=@(typeof(Radzen.Colors).Assembly.GetName().Version)"></script>
+</body>
+
+</html>

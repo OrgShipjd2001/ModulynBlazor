@@ -1,0 +1,64 @@
+﻿@using Microsoft.AspNetCore.Components.Routing
+@using WebServer.Components.NavComponents
+@using WebServerInterface
+@using WebServerBl
+@inject WebServerSettings ServerSettings
+@inject WebServerModuleManager ModuleManager
+
+<div class="top-row navbar navbar-dark">
+    <div class="container-fluid">
+        <div class="col">
+            <a class="navbar-brand" href="">
+            @if (!string.IsNullOrWhiteSpace(ServerSettings.SiteImage))
+            {
+                <img class="pe-2" src="@ServerSettings.SiteImage" style="width:40px;height:40px" />
+            }
+
+            @if((!string.IsNullOrWhiteSpace(ServerSettings.SiteName)) && (!IconMenuActive))
+            {
+                @ServerSettings.SiteName
+            }
+            </a>
+        </div>
+        <div class="col-auto"></div>
+    </div>
+</div>
+
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+
+<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+    <nav class="flex-column">
+        <RadzenPanelMenu Style="background-color:transparent">
+            <ChildContent>
+                @if (ServerSettings.ShowHomeItem)
+                {
+                    <NavElement NavItem="@(new WebServerNavItem(){NavItemName="Home", Target="", Icon=ServerSettings.SiteImage})" />
+                }
+
+                @foreach (WebServerNavItem navItem in ModuleManager.NavManager.NavEntries)
+                {
+                    <NavElement NavItem="@navItem" />
+                }
+            </ChildContent>
+        </RadzenPanelMenu>
+    </nav>
+</div>
+
+
+@code {
+
+    //bool to send to MainLayout for shrinking sidebar and showing/hide menu text
+    private bool IconMenuActive { get; set; } = false;
+
+    //EventCallback for sending bool to MainLayout
+    [Parameter]
+    public EventCallback<bool> ShowIconMenu { get; set; }
+
+    //Method to toggle IconMenuActive bool and send bool via EventCallback
+    private async Task ToggleIconMenu()
+    {
+        IconMenuActive = !IconMenuActive;
+        await ShowIconMenu.InvokeAsync(IconMenuActive);
+    }
+
+}

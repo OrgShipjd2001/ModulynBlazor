@@ -1,0 +1,78 @@
+﻿@page "/"
+@using Radzen.Blazor
+@using WebServerBl
+@using WebServerInterface
+@inject WebServerModuleManager moduleManager
+@inject NavigationManager NavigationManager
+
+<PageTitle>Home</PageTitle>
+
+<h1>Weclome to @WebServerSettings.Instance.SiteName</h1>
+
+<p>Select an item in the navigation area on the left to get started.</p>
+
+<RadzenCard class="rz-p-4" Variant="Variant.Outlined">
+    <RadzenText class="rz-border-bottom">Installed Modules:</RadzenText>
+        <RadzenCarousel @ref=carousel @bind-SelectedIndex="@selectedIndex" Auto="@auto" Interval="@interval" PagerOverlay="false" ButtonShade="Shade.Default" Style="height:500px">
+            <Items>
+                @foreach (IWebServerModule module in moduleList)
+                {
+                    <RadzenCarouselItem>
+                        <RadzenCard class="rz-w-75">
+                            <RadzenStack Orientation="Orientation.Vertical">
+                                <RadzenStack class="rz-border-bottom" Orientation="Orientation.Horizontal">
+                                @if (!string.IsNullOrEmpty(module.Image))
+                                {
+                                    <img src="@module.Image" style="width: 50px; height: 50px;" />
+                                }
+                                    <RadzenLabel Text="Module:" />@module.ModuleId
+                                </RadzenStack>
+                                <RadzenStack>
+                                    @module.Description
+                                </RadzenStack>
+                            </RadzenStack>
+                        </RadzenCard>
+                    </RadzenCarouselItem>
+                }
+            </Items>
+        </RadzenCarousel>
+    </RadzenCard>
+
+@code {
+    List<IWebServerModule> moduleList = new List<IWebServerModule>();
+
+    RadzenCarousel carousel;
+
+    bool auto = true;
+    double interval = 4000;
+
+    bool started = true;
+    int selectedIndex;
+
+    protected override Task OnInitializedAsync()
+    {
+        moduleList = moduleManager.GetModuleList();
+
+        if (moduleList.Count == 0)
+        {
+            auto = false;
+        }
+
+        return base.OnInitializedAsync();
+    }
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        Task ret = base.OnAfterRenderAsync(firstRender);
+
+        // Redirect the home page to a specific page
+        if (NavigationManager.Uri.EndsWith("/"))
+        {
+            if (!string.IsNullOrWhiteSpace(WebServerSettings.Instance.StartupPage) && (WebServerSettings.Instance.StartupPage != "/"))
+                NavigationManager.NavigateTo(WebServerSettings.Instance.StartupPage);
+        }
+
+        return ret;
+    }
+
+}
