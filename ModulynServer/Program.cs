@@ -3,6 +3,7 @@ using Radzen;
 using ModulynServer.Components;
 using Modulyn.Server.Bl;
 using Modulyn.Server.Interface;
+using System.Reflection;
 
 namespace Modulyn.Server
 {
@@ -69,9 +70,15 @@ namespace Modulyn.Server
             app.UseRouting();
             app.MapControllers();
             app.UseAntiforgery();
-            
-            app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
+            List<Assembly> assemblies = new List<Assembly>();
+            foreach (IWebServerModule module in moduleManager.GetModuleList())
+            {
+                assemblies.Add(module.ModuleAssembly);
+            }
+
+            app.MapRazorComponents<App>().AddInteractiveServerRenderMode().AddAdditionalAssemblies(assemblies.ToArray());
+            
             app.Run();
         }
     }
