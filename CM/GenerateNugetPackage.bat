@@ -67,7 +67,7 @@ echo ^</dependencies^> >> %nugetDir%\webserver.nuspec
 echo ^</metadata^> >> %nugetDir%\webserver.nuspec
 echo ^<files^> >> %nugetDir%\webserver.nuspec
 
-echo ^<file src="%targetDir%\ModulynServer\**" target="content" exclude="**\microsoft*.*;**\system*.*;**\radzen*.*;**\Azure*.*" /^> >> %nugetDir%\webserver.nuspec
+echo ^<file src="%targetDir%\ModulynServer\**" target="content" /^> >> %nugetDir%\webserver.nuspec
 echo ^<file src="%rootDir%\README.md" target="docs\" /^> >> %nugetDir%\webserver.nuspec
 echo ^<file src="%nugetdir%\LICENSE.txt" target="" /^> >> %nugetDir%\webserver.nuspec
 

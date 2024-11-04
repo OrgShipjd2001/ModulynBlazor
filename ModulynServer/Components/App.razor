@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="bootstrap/bootstrap.min.css" />
     <link rel="stylesheet" href="app.css" />
     <link rel="stylesheet" href="Navigation.css" />
-    <link rel="stylesheet" href="WebServer.styles.css" />
+    <link rel="stylesheet" href="ModulynServer.styles.css" />
 
     @if (!string.IsNullOrWhiteSpace(WebServerSettings.Instance.SiteImage))
     {
@@ -19,7 +19,7 @@
     }
     else
     {
-        <link rel="icon" type="image/png" href="webserver.png" />
+        <link rel="icon" type="image/png" href="ModulynBlazor.jpg" />
     }
 
     @foreach(IWebServerModule module in ModuleManager.GetModuleList())
