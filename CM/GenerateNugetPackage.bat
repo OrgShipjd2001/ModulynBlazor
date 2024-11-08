@@ -25,7 +25,7 @@ echo ^<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd"
 echo ^<metadata^> >> %nugetDir%\interface.nuspec
 echo ^<id^>Modulyn.Interface^</id^> >> %nugetDir%\interface.nuspec
 echo ^<version^>%version%%prerelease%^</version^> >> %nugetDir%\interface.nuspec
-echo ^<description^>A library to generate modules for the Modulyn Server^</description^> >> %nugetDir%\interface.nuspec
+echo ^<description^>A library containing the interfaces needed generate modules for the Modulyn Server^</description^> >> %nugetDir%\interface.nuspec
 echo ^<authors^>Jared Shipley^</authors^> >> %nugetDir%\interface.nuspec
 echo ^<repository type="git" url="https://github.com/OrgShipjd2001/ModulynBlazor.git" /^> >> %nugetDir%\interface.nuspec
 echo ^<readme^>docs\README.md^</readme^> >> %nugetDir%\interface.nuspec
@@ -54,7 +54,7 @@ echo ^<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd"
 echo ^<metadata^> >> %nugetDir%\webserver.nuspec
 echo ^<id^>Modulyn.Server^</id^> >> %nugetDir%\webserver.nuspec
 echo ^<version^>%version%%prerelease%^</version^> >> %nugetDir%\webserver.nuspec
-echo ^<description^>The Modulyn Server framework^</description^> >> %nugetDir%\webserver.nuspec
+echo ^<description^>The Modulyn Server framework.  A component, addon based Blazor webserver.^</description^> >> %nugetDir%\webserver.nuspec
 echo ^<authors^>Jared Shipley^</authors^> >> %nugetDir%\webserver.nuspec
 echo ^<repository type="git" url="https://github.com/OrgShipjd2001/ModulynBlazor.git" /^> >> %nugetDir%\webserver.nuspec
 echo ^<readme^>docs\README.md^</readme^> >> %nugetDir%\webserver.nuspec
@@ -83,7 +83,7 @@ erase /f /q %nugetDir%\*.nupkg
 %nugetexe% pack %nugetDir%\interface.nuspec -OutputDirectory %nugetDir%
 %nugetexe% pack %nugetDir%\webserver.nuspec -OutputDirectory %nugetDir%
 
-%nugetexe% source |find "dev"
+%nugetexe% source |find "dev [Enabled]"
 if "%ERRORLEVEL%"=="0" %nugetexe% push %nugetDir%\*.nupkg -Source Dev
 
 :Done
