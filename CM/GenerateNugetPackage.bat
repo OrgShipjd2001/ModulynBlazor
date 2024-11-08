@@ -30,6 +30,7 @@ echo ^<authors^>Jared Shipley^</authors^> >> %nugetDir%\interface.nuspec
 echo ^<repository type="git" url="https://github.com/OrgShipjd2001/ModulynBlazor.git" /^> >> %nugetDir%\interface.nuspec
 echo ^<readme^>docs\README.md^</readme^> >> %nugetDir%\interface.nuspec
 echo ^<license type="file"^>LICENSE.txt^</license^>  >> %nugetDir%\interface.nuspec
+echo ^<icon^>images/ModulynBlazor.jpg^</icon^> >> %nugetDir%\interface.nuspec
 echo ^<dependencies^> >> %nugetDir%\interface.nuspec
 echo ^<group targetFramework="net8.0"^> >> %nugetDir%\interface.nuspec
 echo ^<dependency id="Radzen.Blazor" version="5.3.1" /^> >> %nugetDir%\interface.nuspec
@@ -41,6 +42,7 @@ echo ^<files^> >> %nugetDir%\interface.nuspec
 echo ^<file src="%targetDir%\ModulynInterface\**" target="lib\net8.0"/^> >> %nugetDir%\interface.nuspec
 echo ^<file src="%rootDir%\README.md" target="docs\" /^> >> %nugetDir%\interface.nuspec
 echo ^<file src="%nugetdir%\LICENSE.txt" target="" /^> >> %nugetDir%\interface.nuspec
+echo ^<file src="%rootdir%\Resources\ModulynBlazor.jpg" target="images\" /^> >> %nugetDir%\interface.nuspec
 
 echo ^</files^> >> %nugetDir%\interface.nuspec
 echo ^</package^> >> %nugetDir%\interface.nuspec
@@ -57,6 +59,7 @@ echo ^<authors^>Jared Shipley^</authors^> >> %nugetDir%\webserver.nuspec
 echo ^<repository type="git" url="https://github.com/OrgShipjd2001/ModulynBlazor.git" /^> >> %nugetDir%\webserver.nuspec
 echo ^<readme^>docs\README.md^</readme^> >> %nugetDir%\webserver.nuspec
 echo ^<license type="file"^>LICENSE.txt^</license^>  >> %nugetDir%\webserver.nuspec
+echo ^<icon^>images/ModulynBlazor.jpg^</icon^> >> %nugetDir%\webserver.nuspec
 echo ^<dependencies^> >> %nugetDir%\webserver.nuspec
 echo ^<group targetFramework="net8.0"^> >> %nugetDir%\webserver.nuspec
 echo ^<dependency id="Radzen.Blazor" version="5.3.1" /^> >> %nugetDir%\webserver.nuspec
@@ -70,6 +73,7 @@ echo ^<files^> >> %nugetDir%\webserver.nuspec
 echo ^<file src="%targetDir%\ModulynServer\**" target="content" /^> >> %nugetDir%\webserver.nuspec
 echo ^<file src="%rootDir%\README.md" target="docs\" /^> >> %nugetDir%\webserver.nuspec
 echo ^<file src="%nugetdir%\LICENSE.txt" target="" /^> >> %nugetDir%\webserver.nuspec
+echo ^<file src="%rootdir%\Resources\ModulynBlazor.jpg" target="images\" /^> >> %nugetDir%\webserver.nuspec
 
 echo ^</files^> >> %nugetDir%\webserver.nuspec
 echo ^</package^> >> %nugetDir%\webserver.nuspec
