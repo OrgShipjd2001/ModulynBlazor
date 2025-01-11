@@ -3,6 +3,6 @@
 	<WebSiteName>Modulyn Server</WebSiteName>		<!-- display name of the web site -->
 	<SiteImage>modulynblazor.png</SiteImage>		<!-- url to the web site image -->
 	<ShowHomeItem>true</ShowHomeItem>			<!-- turns the site default home page on or off -->
-	<ModulesPath>Modules</ModulesPath>			<!-- Can be a full directory path or a subdirectory name -->
+	<ModulesPath>D:\GIT\IntegrationSystem\TestResultMonitor\Publish\Debug\Modules\TestResultModule</ModulesPath>			<!-- Can be a full directory path or a subdirectory name -->
 	<StartupPage></StartupPage>					<!-- Override / redirect the home page to the set page -->
 </WebSiteSettings>

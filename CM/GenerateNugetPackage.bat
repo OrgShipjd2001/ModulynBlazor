@@ -1,6 +1,6 @@
 @echo off
 
-set prerelease=-alpha
+set prerelease=-beta
 set scriptDir=%~dp0
 set rootDir=%scriptDir%..
 set publishDir=%rootDir%\Publish
