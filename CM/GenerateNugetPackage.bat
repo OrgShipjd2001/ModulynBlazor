@@ -33,7 +33,11 @@ echo ^<license type="file"^>LICENSE.txt^</license^>  >> %nugetDir%\interface.nus
 echo ^<icon^>images/ModulynBlazor.jpg^</icon^> >> %nugetDir%\interface.nuspec
 echo ^<dependencies^> >> %nugetDir%\interface.nuspec
 echo ^<group targetFramework="net8.0"^> >> %nugetDir%\interface.nuspec
-echo ^<dependency id="Radzen.Blazor" version="5.3.1" /^> >> %nugetDir%\interface.nuspec
+echo ^<dependency id="Radzen.Blazor" version="5.7.6" /^> >> %nugetDir%\interface.nuspec
+echo ^<dependency id="Azure.Identity" version="1.13.1" /^> >> %nugetDir%\interface.nuspec
+echo ^<dependency id="System.Formats.Asn1" version="9.0.1" /^> >> %nugetDir%\interface.nuspec
+echo ^<dependency id="Microsoft.AspNetCore.Components.Web" version="8.0.12" /^> >> %nugetDir%\interface.nuspec
+echo ^<dependency id="Microsoft.EntityFrameworkCore.SqlServer" version="8.0.12" /^> >> %nugetDir%\interface.nuspec
 echo ^</group^> >> %nugetDir%\interface.nuspec
 echo ^</dependencies^> >> %nugetDir%\interface.nuspec
 echo ^</metadata^> >> %nugetDir%\interface.nuspec
@@ -62,8 +66,8 @@ echo ^<license type="file"^>LICENSE.txt^</license^>  >> %nugetDir%\webserver.nus
 echo ^<icon^>images/ModulynBlazor.jpg^</icon^> >> %nugetDir%\webserver.nuspec
 echo ^<dependencies^> >> %nugetDir%\webserver.nuspec
 echo ^<group targetFramework="net8.0"^> >> %nugetDir%\webserver.nuspec
-echo ^<dependency id="Radzen.Blazor" version="5.3.1" /^> >> %nugetDir%\webserver.nuspec
-echo ^<dependency id="Microsoft.EntityFrameworkCore.SqlServer" version="8.0.10" /^> >> %nugetDir%\webserver.nuspec
+echo ^<dependency id="Radzen.Blazor" version="5.7.6" /^> >> %nugetDir%\webserver.nuspec
+echo ^<dependency id="Microsoft.EntityFrameworkCore.SqlServer" version="8.0.12" /^> >> %nugetDir%\webserver.nuspec
 echo ^</group^> >> %nugetDir%\webserver.nuspec
 echo ^</dependencies^> >> %nugetDir%\webserver.nuspec
 
