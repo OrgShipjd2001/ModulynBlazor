@@ -9,13 +9,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.10" />
-    <PackageReference Include="Radzen.Blazor" Version="5.3.1" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\ModulynInterface\ModulynInterface.csproj" />
-    <ProjectReference Include="..\ModulynServerBl\ModulynServerBl.csproj" />
+    <PackageReference Include="Azure.Identity" Version="1.13.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.12" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.12" />
+    <PackageReference Include="Radzen.Blazor" Version="5.7.6" />
+    <PackageReference Include="System.Formats.Asn1" Version="9.0.1" />
   </ItemGroup>
 
 </Project>
