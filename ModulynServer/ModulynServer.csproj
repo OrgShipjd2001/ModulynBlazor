@@ -16,4 +16,9 @@
     <PackageReference Include="System.Formats.Asn1" Version="9.0.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ModulynInterface\ModulynInterface.csproj" />
+    <ProjectReference Include="..\ModulynServerBl\ModulynServerBl.csproj" />
+  </ItemGroup>
+
 </Project>
