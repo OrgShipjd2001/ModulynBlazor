@@ -1,0 +1,6 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<RootNavStructure>
+	<NavItem Name="Home" Target="/" >
+		<!-- <NavItem Name="Test" ModuleId="TestModule" /> -->
+	</NavItem>
+</RootNavStructure>

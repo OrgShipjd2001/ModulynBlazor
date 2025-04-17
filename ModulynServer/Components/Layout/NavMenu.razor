@@ -7,15 +7,15 @@
     <div class="container-fluid">
         <div class="col">
             <a class="navbar-brand" href="">
-            @if (!string.IsNullOrWhiteSpace(ServerSettings.SiteImage))
-            {
-                <img class="pe-2" src="@ServerSettings.SiteImage" style="width:40px;height:40px" />
-            }
+                @if (!string.IsNullOrWhiteSpace(ServerSettings.SiteImage))
+                {
+                    <img class="pe-2" src="@ServerSettings.SiteImage" style="width:40px;height:40px" />
+                }
 
-            @if((!string.IsNullOrWhiteSpace(ServerSettings.SiteName)) && (!IconMenuActive))
-            {
-                @ServerSettings.SiteName
-            }
+                @if((!string.IsNullOrWhiteSpace(ServerSettings.SiteName)) && (!IconMenuActive))
+                {
+                    @ServerSettings.SiteName
+                }
             </a>
         </div>
         <div class="col-auto"></div>
@@ -30,7 +30,10 @@
             <ChildContent>
                 @if (ServerSettings.ShowHomeItem)
                 {
-                    <NavElement NavItem="@(new WebServerNavItem(){NavItemName="Home", Target="", Icon=ServerSettings.SiteImage})" />
+                    if (ModuleManager.NavManager.GetNavEntry("Home") == null)
+                    {
+                        <NavElement NavItem="@(new WebServerNavItem(){NavItemName="Home", Target="", Icon=ServerSettings.SiteImage})" />
+                    }
                 }
 
                 @foreach (WebServerNavItem navItem in ModuleManager.NavManager.NavEntries)

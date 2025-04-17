@@ -56,13 +56,23 @@ namespace Modulyn.Server
                 app.UseExceptionHandler("/Error");
             }
 
-            // Add the module folders to the file provider
+            // Add the module specific files, middleware, etc.
             List<IFileProvider> providerList = new List<IFileProvider>();
             providerList.Add(app.Environment.WebRootFileProvider);
             foreach(IWebServerModule module in moduleManager.GetModuleList())
             {
                 PhysicalFileProvider moduleProvider = new PhysicalFileProvider(Path.Combine(Path.GetDirectoryName(module.ModuleAssembly.Location), "wwwroot"));
                 providerList.Add(moduleProvider);
+
+                Dictionary<Type, List<object>> middleware = module.GetWebAppMiddleware();
+                foreach (Type type in middleware.Keys)
+                {
+                    app.UseMiddleware(type, middleware[type].ToArray());
+                }
+
+                ModuleAppUseFlags moduleAppUseFlags = module.GetModuleAppUseFlags();
+                if (moduleAppUseFlags.HasFlag(ModuleAppUseFlags.Websockets))
+                    app.UseWebSockets();
             }
             app.Environment.WebRootFileProvider = new CompositeFileProvider(providerList);
 
