@@ -9,10 +9,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Data\RootNavigationStructure.xml" />
     <None Remove="Data\WebSiteSettings.xml" />
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="Data\RootNavigationStructure.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Data\WebSiteSettings.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

@@ -4,6 +4,7 @@
     {
         public string NavItemPath { get; set; } = string.Empty;
         public string NavItemName { get; set; } = string.Empty;
+        public string ModuleId { get; set; } = string.Empty;
         public string? Target { get; set; } = null;
         public string? Icon { get; set; } = null;
 

@@ -28,9 +28,13 @@ namespace Modulyn.Server.Bl
 
             List<IWebModuleNavEntry> navEntries = module.GetModuleNavEntries();
 
+            WebServerNavItem rootItem = NavManager.GetModuleRoot(module.ModuleId);
             foreach(IWebModuleNavEntry entry in navEntries)
             {
-                NavManager.AddNavEntry(entry);
+                if (rootItem == null)
+                    NavManager.AddNavEntry(entry);
+                else
+                    NavManager.AddNavEntry(rootItem, entry);
             }
         }
 

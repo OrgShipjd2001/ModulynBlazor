@@ -34,5 +34,15 @@ namespace TestModule
         {
             return null;
         }
+
+        public Dictionary<Type, List<object>> GetWebAppMiddleware()
+        {
+            return new Dictionary<Type, List<object>>();
+        }
+
+        public ModuleAppUseFlags GetModuleAppUseFlags()
+        {
+            return ModuleAppUseFlags.None;
+        }
     }
 }
