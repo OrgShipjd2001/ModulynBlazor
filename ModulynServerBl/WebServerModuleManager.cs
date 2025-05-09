@@ -74,7 +74,7 @@ namespace Modulyn.Server.Bl
             string asmPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string modulePath = string.Empty;
 
-            Logging.LogInfo("Discover Modules");
+            Logging.LogInfo("Discover Modules", "Modulyn");
 
             // Full directory path set in the settings
             if (Directory.Exists(WebServerSettings.Instance.ModulesPath))
@@ -96,11 +96,11 @@ namespace Modulyn.Server.Bl
                 }
             }
 
-            Logging.LogInfo("Modules Path: " + modulePath);
+            Logging.LogInfo("Modules Path: " + modulePath, "Modulyn");
 
             if (!Directory.Exists(modulePath))
             {
-                Logging.LogWarning("Modules Path does not exist: " + modulePath);
+                Logging.LogWarning("Modules Path does not exist: " + modulePath, "Modulyn");
                 return;
             }
 
@@ -132,7 +132,7 @@ namespace Modulyn.Server.Bl
                 }
                 catch (Exception exc)
                 {
-                    Logging.LogWarning("Discover Modules - Failed to load assembly: " + dll + " - " + exc.Message);
+                    Logging.LogWarning("Discover Modules - Failed to load assembly: " + dll + " - " + exc.Message, "Modulyn");
                 }
             }
         }
