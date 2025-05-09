@@ -6,10 +6,21 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>Modulyn Server</Title>
+    <PackageIcon>ModulynBlazor.jpg</PackageIcon>
   </PropertyGroup>
+	
+  <ItemGroup>
+    <None Include="..\Resources\ModulynBlazor.jpg">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Azure.Identity" Version="1.13.1" />
+    <PackageReference Include="Lumberjack" Version="0.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.15" />
     <PackageReference Include="System.Formats.Asn1" Version="9.0.1" />
   </ItemGroup>
