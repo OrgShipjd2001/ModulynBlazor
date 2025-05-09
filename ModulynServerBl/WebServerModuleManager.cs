@@ -1,4 +1,6 @@
-﻿using Modulyn.Server.Interface;
+﻿using Lumberjack.Interface;
+using Modulyn.Server.Interface;
+using ModulynServerBl;
 using System.Reflection;
 
 
@@ -14,6 +16,8 @@ namespace Modulyn.Server.Bl
 
         public WebServerModuleManager() 
         {
+            ModuleAssemblyResolver.Initialze();
+
             DiscoverModules();
 
             foreach (IWebServerModule module in GetModuleList())
@@ -70,6 +74,8 @@ namespace Modulyn.Server.Bl
             string asmPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string modulePath = string.Empty;
 
+            Logging.LogInfo("Discover Modules");
+
             // Full directory path set in the settings
             if (Directory.Exists(WebServerSettings.Instance.ModulesPath))
             {
@@ -90,10 +96,22 @@ namespace Modulyn.Server.Bl
                 }
             }
 
+            Logging.LogInfo("Modules Path: " + modulePath);
+
             if (!Directory.Exists(modulePath))
+            {
+                Logging.LogWarning("Modules Path does not exist: " + modulePath);
                 return;
+            }
+
+            // Update the assembly resolver
+            foreach(string dirname in Directory.GetDirectories(modulePath))
+            {
+                ModuleAssemblyResolver.AddDirectory(dirname);
+            }
 
             string[] fileList = Directory.GetFiles(modulePath, "*.dll", SearchOption.AllDirectories);
+
             foreach (string dll in fileList)
             {
                 try
@@ -112,8 +130,9 @@ namespace Modulyn.Server.Bl
                         }
                     }
                 }
-                catch (Exception)
+                catch (Exception exc)
                 {
+                    Logging.LogWarning("Discover Modules - Failed to load assembly: " + dll + " - " + exc.Message);
                 }
             }
         }

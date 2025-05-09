@@ -4,6 +4,7 @@ using ModulynServer.Components;
 using Modulyn.Server.Bl;
 using Modulyn.Server.Interface;
 using System.Reflection;
+using Lumberjack.Interface;
 
 namespace Modulyn.Server
 {
@@ -11,6 +12,15 @@ namespace Modulyn.Server
     {
         public static void Main(string[] args)
         {
+            string asmPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string logPath = Path.Combine(asmPath, "Logs");
+            if (!Directory.Exists(logPath))
+                Directory.CreateDirectory(logPath);
+            string logFile = Path.Combine(logPath, "Log_ModulynServer.log");
+            Logging.CreateLogFile(logFile);
+
+            Logging.LogInfo("Begin WebApplicationBuilder part");
+
             WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
             WebServerModuleManager moduleManager = new WebServerModuleManager();
@@ -32,6 +42,7 @@ namespace Modulyn.Server
                 {
                     foreach (ModuleBuilderService service in services)
                     {
+                        Logging.LogInfo("Adding service: " + service.ServiceType.Name + " - " + service.ServiceScope.ToString() + " - " + service.Service?.GetType().Name);
                         switch (service.ServiceScope)
                         {
                             case WebServiceScope.Singleton:
@@ -48,6 +59,7 @@ namespace Modulyn.Server
                 }
             }
 
+            Logging.LogInfo("Begin WebApplication part");
             WebApplication app = builder.Build();
             
             // Configure the HTTP request pipeline.
@@ -62,17 +74,25 @@ namespace Modulyn.Server
             foreach(IWebServerModule module in moduleManager.GetModuleList())
             {
                 PhysicalFileProvider moduleProvider = new PhysicalFileProvider(Path.Combine(Path.GetDirectoryName(module.ModuleAssembly.Location), "wwwroot"));
-                providerList.Add(moduleProvider);
+                if (moduleProvider.GetDirectoryContents(string.Empty).Exists)
+                {
+                    Logging.LogInfo("Adding module file provider: " + module.ModuleId);
+                    providerList.Add(moduleProvider);
+                }
 
                 Dictionary<Type, List<object>> middleware = module.GetWebAppMiddleware();
                 foreach (Type type in middleware.Keys)
                 {
+                    Logging.LogInfo("Adding middleware: " + type.Name);
                     app.UseMiddleware(type, middleware[type].ToArray());
                 }
 
                 ModuleAppUseFlags moduleAppUseFlags = module.GetModuleAppUseFlags();
                 if (moduleAppUseFlags.HasFlag(ModuleAppUseFlags.Websockets))
+                {
+                    Logging.LogInfo("Adding websockets: " + module.ModuleId);
                     app.UseWebSockets();
+                }
             }
             app.Environment.WebRootFileProvider = new CompositeFileProvider(providerList);
 
