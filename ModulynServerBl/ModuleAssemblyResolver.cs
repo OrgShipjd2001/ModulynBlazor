@@ -1,5 +1,4 @@
 ﻿using Lumberjack.Interface;
-using System.IO;
 using System.Reflection;
 
 namespace ModulynServerBl
@@ -11,7 +10,7 @@ namespace ModulynServerBl
 
         public static void Initialze()
         {
-            Logging.LogInfo("Initialize Assembly Resolver");
+            Logging.LogInfo("Initialize Assembly Resolver", "Modulyn");
             Assembly asm = Assembly.GetEntryAssembly();
             if (asm == null)
                 throw new InvalidOperationException("Could not retrieve Entry Assembly");
@@ -20,14 +19,14 @@ namespace ModulynServerBl
             if (!Directory.Exists(m_baseDir))
                 throw new InvalidOperationException("Base Directory does not exist: " + m_baseDir);
 
-            Logging.LogInfo("Base Directory: " + m_baseDir);
+            Logging.LogInfo("Base Directory: " + m_baseDir, "Modulyn");
 
             AppDomain.CurrentDomain.AssemblyResolve += CurrentDomainOnAssemblyResolve;
         }
 
         public static void Initialze(Assembly asm)
         {
-            Logging.LogInfo("Initialize Assembly Resolver with provided assembly");
+            Logging.LogInfo("Initialize Assembly Resolver with provided assembly", "Modulyn");
 
             if (asm == null)
                 throw new InvalidOperationException("Assembly parameter not set");
@@ -36,14 +35,14 @@ namespace ModulynServerBl
             if (!Directory.Exists(m_baseDir))
                 throw new InvalidOperationException("Base Directory does not exist: " + m_baseDir);
 
-            Logging.LogInfo("Base Directory: " + m_baseDir);
+            Logging.LogInfo("Base Directory: " + m_baseDir, "Modulyn");
 
             AppDomain.CurrentDomain.AssemblyResolve += CurrentDomainOnAssemblyResolve;
         }
 
         public static void AddDirectory(string directory)
         {
-            Logging.LogInfo("Assembly Resolver Add Directory: " + directory);
+            Logging.LogInfo("Assembly Resolver Add Directory: " + directory, "Modulyn");
 
             string checkedDir = GetCheckedDirectory(directory);
 
@@ -56,7 +55,7 @@ namespace ModulynServerBl
 
         public static void RemoveDirectory(string directory)
         {
-            Logging.LogInfo("Assembly Resolver Remove Directory: " + directory);
+            Logging.LogInfo("Assembly Resolver Remove Directory: " + directory, "Modulyn");
 
             string checkedDir = GetCheckedDirectory(directory);
 
@@ -109,7 +108,7 @@ namespace ModulynServerBl
                 catch (Exception exc)
                 {
                     // Log error
-                    Logging.LogError("Execption in resolve assembly: " + asmName + Environment.NewLine + exc.ToString()); 
+                    Logging.LogError("Execption in resolve assembly: " + asmName + Environment.NewLine + exc.ToString(), "Modulyn"); 
                 }
 
                 if (results.Count > 0)

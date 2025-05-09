@@ -17,9 +17,9 @@ namespace Modulyn.Server
             if (!Directory.Exists(logPath))
                 Directory.CreateDirectory(logPath);
             string logFile = Path.Combine(logPath, "Log_ModulynServer.log");
-            Logging.CreateLogFile(logFile);
+            Logging.CreateLogFile(logFile, "Modulyn");
 
-            Logging.LogInfo("Begin WebApplicationBuilder part");
+            Logging.LogInfo("Begin WebApplicationBuilder part", "Modulyn");
 
             WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -42,7 +42,7 @@ namespace Modulyn.Server
                 {
                     foreach (ModuleBuilderService service in services)
                     {
-                        Logging.LogInfo("Adding service: " + service.ServiceType.Name + " - " + service.ServiceScope.ToString() + " - " + service.Service?.GetType().Name);
+                        Logging.LogInfo("Adding service: " + service.ServiceType.Name + " - " + service.ServiceScope.ToString() + " - " + service.Service?.GetType().Name, "Modulyn");
                         switch (service.ServiceScope)
                         {
                             case WebServiceScope.Singleton:
@@ -76,21 +76,21 @@ namespace Modulyn.Server
                 PhysicalFileProvider moduleProvider = new PhysicalFileProvider(Path.Combine(Path.GetDirectoryName(module.ModuleAssembly.Location), "wwwroot"));
                 if (moduleProvider.GetDirectoryContents(string.Empty).Exists)
                 {
-                    Logging.LogInfo("Adding module file provider: " + module.ModuleId);
+                    Logging.LogInfo("Adding module file provider: " + module.ModuleId, "Modulyn");
                     providerList.Add(moduleProvider);
                 }
 
                 Dictionary<Type, List<object>> middleware = module.GetWebAppMiddleware();
                 foreach (Type type in middleware.Keys)
                 {
-                    Logging.LogInfo("Adding middleware: " + type.Name);
+                    Logging.LogInfo("Adding middleware: " + type.Name, "Modulyn");
                     app.UseMiddleware(type, middleware[type].ToArray());
                 }
 
                 ModuleAppUseFlags moduleAppUseFlags = module.GetModuleAppUseFlags();
                 if (moduleAppUseFlags.HasFlag(ModuleAppUseFlags.Websockets))
                 {
-                    Logging.LogInfo("Adding websockets: " + module.ModuleId);
+                    Logging.LogInfo("Adding websockets: " + module.ModuleId, "Modulyn");
                     app.UseWebSockets();
                 }
             }
