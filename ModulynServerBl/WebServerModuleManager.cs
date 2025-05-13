@@ -125,6 +125,7 @@ namespace Modulyn.Server.Bl
 
                         if (asmType.GetInterface(typeof(IWebServerModule).FullName) != null)
                         {
+                            Logging.LogInfo("Found Module: " + dll, "Modulyn");
                             IWebServerModule module = (IWebServerModule)modAsm.CreateInstance(asmType.FullName);
                             AddModule(module);
                         }
