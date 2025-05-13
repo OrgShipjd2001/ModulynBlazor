@@ -97,6 +97,10 @@ namespace ModulynServerBl
             string asmName = GetAssemblyFileName(args);
 
             List<string> results = new List<string>();
+
+            string callingasmDir = Path.GetDirectoryName(args.RequestingAssembly.Location);
+            results.AddRange(Directory.GetFiles(callingasmDir, asmName, SearchOption.TopDirectoryOnly));
+
             results.AddRange(Directory.GetFiles(m_baseDir, asmName, SearchOption.TopDirectoryOnly));
 
             foreach (string directory in m_additionalDirs)
