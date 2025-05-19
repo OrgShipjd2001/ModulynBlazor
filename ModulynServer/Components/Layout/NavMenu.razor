@@ -30,10 +30,7 @@
             <ChildContent>
                 @if (ServerSettings.ShowHomeItem)
                 {
-                    if (ModuleManager.NavManager.GetNavEntry("Home") == null)
-                    {
-                        <NavElement NavItem="@(new WebServerNavItem(){NavItemName="Home", Target="", Icon=ServerSettings.SiteImage})" />
-                    }
+                    <NavElement NavItem="@(new WebServerNavItem(){NavItemName="Home", Target="", Icon=ServerSettings.SiteImage})" />
                 }
 
                 @foreach (WebServerNavItem navItem in ModuleManager.NavManager.NavEntries)
