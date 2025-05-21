@@ -1,7 +1,7 @@
 ﻿using Lumberjack.Interface;
 using System.Reflection;
 
-namespace ModulynServerBl
+namespace Modulyn.Server.Bl
 {
     public static class ModuleAssemblyResolver
     {

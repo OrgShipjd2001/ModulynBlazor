@@ -1,0 +1,42 @@
+﻿@page "/register"
+@using Microsoft.AspNetCore.Identity
+@using ModulynServer.model
+@inject NavigationManager Navigation
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h3>Register New Account</h3>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <div style="max-width: 450px; margin: auto; margin-top: 20px; border: 1px solid #ccc; padding: 20px;">
+                <form action="/api/auth/register" method="post">
+                    <div>
+                        <label for="username_html">Username:</label>
+                        <input type="text" id="username_html" name="username" value="" />
+                    </div>
+                    <div>
+                        <label for="email_html">Email:</label>
+                        <input type="email" id="email_html" name="email" value="" />
+                    </div>
+                    <div>
+                        <label for="password_html">Password:</label>
+                        <input type="password" id="password_html" name="password" value="" />
+                    </div>
+                    <div>
+                        <label for="confirmpassword_html">Confirm Password:</label>
+                        <input type="password" id="confirmpassword_html" name="confirmpassword" value="" />
+                    </div>
+
+                    <button type="submit">Register</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    // No registerData or other Blazor code needed for this temporary test
+}

@@ -1,0 +1,69 @@
+﻿@page "/login"
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Identity
+@using ModulynServer.model
+@inject NavigationManager Navigation
+@inject SignInManager<IdentityUser>? SignInManager
+@inject ILogger<Login> Logger
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IAuthenticationSchemeProvider SchemeProvider
+
+<h3 class="text-center mt-4">Sign In</h3>
+
+<RadzenCard Style="max-width: 450px; margin: auto; margin-top: 20px;">
+    <RadzenTemplateForm Data=@loginData Action="/api/auth/login" Method="Post">
+        <RadzenLogin AllowRegister="true" AllowResetPassword="true" Register="OnRegister" Username="@loginData.username" Password="@loginData.password"/>
+    </RadzenTemplateForm>
+
+    <div class="mt-4 text-center">
+        @if (ExternalLoginSchemes?.Any() == true)
+        {
+            <div class="mt-4 text-center">
+                @foreach (var scheme in ExternalLoginSchemes)
+                {
+                    <RadzenButton Text="@scheme.DisplayName" Icon="login" Style="margin: 0.5rem"
+                    Click=@(() => ExternalLogin(scheme.Name)) />
+                }
+            </div>
+        }
+    </div>
+</RadzenCard>
+
+@code {
+    private string? errorMessage;
+    private IEnumerable<AuthenticationScheme>? ExternalLoginSchemes;
+    private LoginData loginData = new LoginData();
+
+    private void ExternalLogin(string provider)
+    {
+        var returnUrl = Navigation.ToBaseRelativePath(Navigation.Uri);
+        var encodedReturnUrl = Uri.EscapeDataString("/"); // or returnUrl if you want to return to same page
+        Navigation.NavigateTo($"Identity/Account/ExternalLogin?provider={provider}&returnUrl={encodedReturnUrl}", forceLoad: true);
+    }
+
+    private async Task OnRegister()
+    {
+        Navigation.NavigateTo("/register");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (authState.User.Identity?.IsAuthenticated == true)
+        {
+            Navigation.NavigateTo("/");
+        }
+
+        var allSchemes = await SchemeProvider.GetAllSchemesAsync();
+        ExternalLoginSchemes = allSchemes
+            .Where(scheme =>
+                !string.IsNullOrEmpty(scheme.DisplayName) && // Only show schemes with a display name (usually external ones)
+                scheme.Name != CookieAuthenticationDefaults.AuthenticationScheme && // Exclude the cookie scheme
+                scheme.Name != "None" // Only include schemes enabled in your settings
+            )
+            .OrderBy(s => s.DisplayName) // Order for consistent display
+            .ToList();
+    }
+}
