@@ -15,6 +15,9 @@ namespace Modulyn.Server.Bl
         public bool ShowHomeItem { get; set; } = true;
         public string ModulesPath { get; set; } = "Modules";
         public string StartupPage { get; set; } = "/";
+        public bool Authentication { get; set; } = false;
+        public List<WebServerAuthSettings> AuthSettings { get; set; } = new List<WebServerAuthSettings>();
+
 
         public static WebServerSettings Instance
         {
@@ -71,6 +74,22 @@ namespace Modulyn.Server.Bl
             if (node != null)
                 if (!string.IsNullOrEmpty(node.InnerText))
                     StartupPage = node.InnerText;
+
+            node = xmlNode.SelectSingleNode("Authentication/Enabled");
+            if (node != null)
+                if (!string.IsNullOrEmpty(node.InnerText))
+                    Authentication = node.InnerText.Equals("true", StringComparison.InvariantCultureIgnoreCase);
+
+            XmlNodeList nodeList = xmlNode.SelectNodes("Authentication/AuthSettings");
+            if (nodeList != null)
+            {
+                foreach (XmlNode authNode in nodeList)
+                {
+                    WebServerAuthSettings authSettings = new WebServerAuthSettings();
+                    authSettings.LoadSettings(authNode);
+                    AuthSettings.Add(authSettings);
+                }
+            }
         }
     }
 }
