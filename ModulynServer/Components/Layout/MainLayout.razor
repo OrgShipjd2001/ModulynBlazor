@@ -14,6 +14,7 @@
         <div class="top-row px-4" style="text-align:right">
             <AuthorizeView>
                 <Authorized Context="authContext">
+                    <span>@authContext.User.Identity.Name</span><br />
                     <RadzenTemplateForm TItem="object" Action="/api/auth/logout" Method="Post">
                         <RadzenButton ButtonType="ButtonType.Submit" Text="Logout" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary" />
                     </RadzenTemplateForm>
