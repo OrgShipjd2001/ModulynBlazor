@@ -1,6 +1,7 @@
 ﻿@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Identity
 @inherits LayoutComponentBase
+@inject WebServerSettings serverSettings
 @inject NavigationManager navMgr
 
 <RadzenComponents/>
@@ -20,7 +21,10 @@
                     </RadzenTemplateForm>
                 </Authorized>
                 <NotAuthorized>
-                    <RadzenButton Text="Login" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Primary" Click="Login"/>
+                    @if (serverSettings.Authentication)
+                    {
+                        <RadzenButton Text="Login" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Primary" Click="Login"/>
+                    }
                 </NotAuthorized>
             </AuthorizeView>
         </div>
