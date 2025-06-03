@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Components.Server;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Modulyn.Server
 {
@@ -43,8 +44,6 @@ namespace Modulyn.Server
             builder.Services.AddAuthorization();
             builder.Services.AddCascadingAuthenticationState();
             builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStateProvider>();
-
-
 
             // Add module services
             foreach (IWebServerModule module in moduleManager.GetModuleList())
@@ -179,7 +178,7 @@ namespace Modulyn.Server
                     builder.Services.AddDbContext<ApplicationDbContext>(options =>
                         options.UseSqlServer(connectionString));
 
-                    builder.Services.AddDefaultIdentity<IdentityUser>(options =>
+                    builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
                     {
                         options.SignIn.RequireConfirmedAccount = false;
                         options.Password.RequireDigit = true;
@@ -195,6 +194,14 @@ namespace Modulyn.Server
                 if ((auth.Provider.Equals("windows", StringComparison.OrdinalIgnoreCase)) && auth.Enabled)
                 {
                     builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
+
+                    builder.Services.AddAuthorization(options =>
+                    {
+                        options.AddPolicy("WindowsAuthenticatedUser", policy =>
+                            policy.RequireAuthenticatedUser() // User must be authenticated
+                                                              // Optional: Restrict to only the Negotiate (Windows Auth) scheme
+                                  .AddAuthenticationSchemes(NegotiateDefaults.AuthenticationScheme));
+                    });
                 }
 
                 if ((auth.Provider.Equals("entraid", StringComparison.OrdinalIgnoreCase)) && auth.Enabled)

@@ -6,10 +6,14 @@
 	<ModulesPath>Modules</ModulesPath>			<!-- Can be a full directory path or a subdirectory name -->
 	<StartupPage></StartupPage>					<!-- Override / redirect the home page to the set page -->
 	<Authentication>
-		<Enabled>true</Enabled>
+		<Enabled>false</Enabled>
+		<AuthSettings>
+			<Provider>Windows</Provider>
+			<Enabled>false</Enabled>
+		</AuthSettings>
 		<AuthSettings>
 			<Provider>Local</Provider>
-			<Enabled>true</Enabled>
+			<Enabled>false</Enabled>
 			<Property name="DbType">SQLServer</Property>
 			<Property name="ConnectionString">Server=HMIIntegration;Database=applicationdb;User Id=IntSvcDbUser;Password=int$svc$db$user$1;MultipleActiveResultSets=true;Encrypt=False</Property>
 		</AuthSettings>
