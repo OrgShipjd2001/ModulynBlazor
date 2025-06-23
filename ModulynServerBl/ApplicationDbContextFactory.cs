@@ -5,7 +5,7 @@ namespace Modulyn.Server.Bl
 {
     public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<ApplicationDbContext>
     {
-        internal static string defaultconnectionstring = "Server=HMIIntegration;Database=applicationdb;User Id=IntSvcDbUser;Password=int$svc$db$user$1;MultipleActiveResultSets=true;Encrypt=False";
+        internal static string defaultconnectionstring = "Data Source=DBServer;Initial Catalog=ModulynAuth;Integrated Security=True;Pooling=False;MultipleActiveResultSets=True;Encrypt=False";
 
         public ApplicationDbContext CreateDbContext(string[] args)
         {

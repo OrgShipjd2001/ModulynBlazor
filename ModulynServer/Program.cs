@@ -1,24 +1,20 @@
-using Microsoft.Extensions.FileProviders;
-using Radzen;
-using ModulynServer.Components;
-using Modulyn.Server.Bl;
-using Modulyn.Server.Interface;
-using System.Reflection;
 using Lumberjack.Interface;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.Authentication.Negotiate;
-using Microsoft.AspNetCore.Components.Server;
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
+using Modulyn.Server.Bl;
+using Modulyn.Server.Interface;
+using ModulynServer.Components;
+using ModulynServer.Components.Account;
+using Radzen;
+using System.Reflection;
 
 namespace Modulyn.Server
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             string asmPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string logPath = Path.Combine(asmPath, "Logs");
@@ -40,10 +36,8 @@ namespace Modulyn.Server
             builder.Services.AddSingleton(WebServerSettings.Instance);
             builder.Services.AddSingleton(moduleManager);
 
-            AddAuthentication(builder);
-            builder.Services.AddAuthorization();
-            builder.Services.AddCascadingAuthenticationState();
-            builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStateProvider>();
+            ConfigureCoreAuthentication(builder);
+            ConfigureAuthenticationProviders(builder);
 
             // Add module services
             foreach (IWebServerModule module in moduleManager.GetModuleList())
@@ -75,40 +69,18 @@ namespace Modulyn.Server
             Logging.LogInfo("Begin WebApplication part");
             WebApplication app = builder.Build();
 
-            // --- Database Migration Call ---
-            // This section should only run if local authentication is enabled.
-            // You need to scope a service provider to get the DbContext.
-            // This ensures the DbContext is properly disposed after use.
-            if (WebServerSettings.Instance.AuthSettings.Any(a => a.Provider.Equals("local", StringComparison.OrdinalIgnoreCase) && a.Enabled))
-            {
-                using (var scope = app.Services.CreateScope())
-                {
-                    var services = scope.ServiceProvider;
-                    try
-                    {
-                        var context = services.GetRequiredService<ApplicationDbContext>();
-                        context.Database.Migrate();
-                        // Optional: Seed initial user/roles if needed
-                        // var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
-                        // var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-                        // await SeedData.Initialize(services, userManager, roleManager); // Call a seeding method
-                        Logging.LogInfo("Database migration completed successfully for local authentication.", "Modulyn");
-                    }
-                    catch (Exception ex)
-                    {
-                        // Log any errors that occur during migration
-                        var logger = services.GetRequiredService<ILogger<Program>>();
-                        logger.LogError(ex, "An error occurred while migrating the database for local authentication.");
-                        Logging.LogError("An error occurred while migrating the database for local authentication: " + ex.Message, "Modulyn");
-                    }
-                }
-            }
-            // --- End Database Migration Call ---
+            await CreateSeedData(app);
 
             // Configure the HTTP request pipeline.
-            if (!app.Environment.IsDevelopment())
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseMigrationsEndPoint();
+            }
+            else
             {
                 app.UseExceptionHandler("/Error");
+                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+                app.UseHsts();
             }
 
             // Add the module specific files, middleware, etc.
@@ -151,59 +123,57 @@ namespace Modulyn.Server
             }
 
             app.MapRazorComponents<App>().AddInteractiveServerRenderMode().AddAdditionalAssemblies(assemblies.ToArray());
+            // Add additional endpoints required by the Identity /Account Razor components.
+            app.MapAdditionalIdentityEndpoints();
 
             app.Run();
         }
 
-        private static void AddAuthentication(WebApplicationBuilder builder)
+        private static void ConfigureCoreAuthentication(WebApplicationBuilder builder)
         {
             WebServerSettings settings = WebServerSettings.Instance;
 
+            builder.Services.AddCascadingAuthenticationState();
+            builder.Services.AddScoped<IdentityUserAccessor>();
+            builder.Services.AddScoped<IdentityRedirectManager>();
+            builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
+
             builder.Services.AddAuthentication(options =>
             {
-                options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-            });
+                options.DefaultScheme = IdentityConstants.ApplicationScheme;
+                options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
+            })
+                .AddIdentityCookies();
 
-            if (!settings.Authentication)
-            {
-                builder.Services.AddAuthentication().AddScheme<AuthenticationSchemeOptions, NoAuthHandler>("None", null);
-                return;
-            }
+            var connectionString = settings.AuthDbConnectionString;
+            builder.Services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseSqlServer(connectionString));
+            builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-            foreach(WebServerAuthSettings auth in settings.AuthSettings)
-            {
-                if ((auth.Provider.Equals("local", StringComparison.OrdinalIgnoreCase)) && auth.Enabled)
+            builder.Services.AddIdentityCore<ApplicationUser>(
+                options =>
                 {
-                    string connectionString = auth.Properties["ConnectionString"];
-                    builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                        options.UseSqlServer(connectionString));
+                    options.SignIn.RequireConfirmedAccount = true;
+                    options.Password.RequireDigit = true;
+                    options.Password.RequiredLength = 8;
+                    options.Password.RequireNonAlphanumeric = false;
+                    options.Password.RequireUppercase = true;
+                    options.Password.RequireLowercase = true;
+                    options.Password.RequiredUniqueChars = 1;
+                })
+                .AddRoles<IdentityRole>()
+                .AddEntityFrameworkStores<ApplicationDbContext>()
+                .AddSignInManager()
+                .AddDefaultTokenProviders();
 
-                    builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
-                    {
-                        options.SignIn.RequireConfirmedAccount = false;
-                        options.Password.RequireDigit = true;
-                        options.Password.RequiredLength = 8;
-                        options.Password.RequireNonAlphanumeric = false;
-                        options.Password.RequireUppercase = true;
-                        options.Password.RequireLowercase = true;
-                        options.Password.RequiredUniqueChars = 1;
-                    })
-                    .AddEntityFrameworkStores<ApplicationDbContext>();
-                }
+            builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+        }
 
-                if ((auth.Provider.Equals("windows", StringComparison.OrdinalIgnoreCase)) && auth.Enabled)
-                {
-                    builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
-
-                    builder.Services.AddAuthorization(options =>
-                    {
-                        options.AddPolicy("WindowsAuthenticatedUser", policy =>
-                            policy.RequireAuthenticatedUser() // User must be authenticated
-                                                              // Optional: Restrict to only the Negotiate (Windows Auth) scheme
-                                  .AddAuthenticationSchemes(NegotiateDefaults.AuthenticationScheme));
-                    });
-                }
-
+        private static void ConfigureAuthenticationProviders(WebApplicationBuilder builder)
+        {
+            WebServerSettings settings = WebServerSettings.Instance;
+            foreach (WebServerAuthSettings auth in settings.AuthSettings)
+            {
                 if ((auth.Provider.Equals("entraid", StringComparison.OrdinalIgnoreCase)) && auth.Enabled)
                 {
                     string instance = auth.Properties["Instance"];
@@ -212,11 +182,12 @@ namespace Modulyn.Server
                     string clientSecret = auth.Properties["ClientSecret"];
                     builder.Services.AddAuthentication().AddOpenIdConnect("EntraID", options =>
                     {
-                        options.Authority = $"{instance}{tenantId}";
+                        options.Authority = $"https://login.microsoftonline.com/{tenantId}";
                         options.ClientId = clientId;
                         options.ClientSecret = clientSecret;
                         options.ResponseType = "code";
                         options.SaveTokens = true;
+                        options.RequireHttpsMetadata = false;
                         // Add other scopes as needed
                     }).AddCookie();
                 }
@@ -243,7 +214,40 @@ namespace Modulyn.Server
                     });
                 }
             }
-            
+        }
+
+        private static async Task CreateSeedData(WebApplication app)
+        {
+            // Seed roles and admin user
+            using (var scope = app.Services.CreateScope())
+            {
+                var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+                var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+                // Seed roles
+                string[] roleNames = { "Admin", "User", "Manager" };
+                foreach (var roleName in roleNames)
+                {
+                    if (!await roleManager.RoleExistsAsync(roleName))
+                    {
+                        await roleManager.CreateAsync(new IdentityRole(roleName));
+                    }
+                }
+
+                // Seed admin user
+                string adminEmail = "admin@example.com";
+                string adminPassword = "admin$123"; // Use a strong password in production
+                var adminUser = await userManager.FindByEmailAsync(adminEmail);
+                if (adminUser == null)
+                {
+                    adminUser = new ApplicationUser { UserName = adminEmail, Email = adminEmail, EmailConfirmed = true };
+                    var result = await userManager.CreateAsync(adminUser, adminPassword);
+                    if (result.Succeeded)
+                    {
+                        await userManager.AddToRoleAsync(adminUser, "Admin");
+                    }
+                }
+            }
         }
     }
 }

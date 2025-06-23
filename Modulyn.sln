@@ -13,6 +13,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{FDAB9DC4-A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestModule", "Test\TestModule\TestModule.csproj", "{97087E1C-81FB-46E3-A68E-455ADEB0B8BA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModulynServer2", "ModulynServer2\ModulynServer2.csproj", "{7EE0D77D-4C29-4141-A43F-F450F7ED6692}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,6 +37,10 @@ Global
 		{97087E1C-81FB-46E3-A68E-455ADEB0B8BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{97087E1C-81FB-46E3-A68E-455ADEB0B8BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{97087E1C-81FB-46E3-A68E-455ADEB0B8BA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7EE0D77D-4C29-4141-A43F-F450F7ED6692}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7EE0D77D-4C29-4141-A43F-F450F7ED6692}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7EE0D77D-4C29-4141-A43F-F450F7ED6692}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7EE0D77D-4C29-4141-A43F-F450F7ED6692}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
