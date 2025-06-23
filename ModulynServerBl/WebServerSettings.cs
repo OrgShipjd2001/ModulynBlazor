@@ -16,6 +16,8 @@ namespace Modulyn.Server.Bl
         public string ModulesPath { get; set; } = "Modules";
         public string StartupPage { get; set; } = "/";
         public bool Authentication { get; set; } = false;
+        public string AuthDbConnectionString { get; set; } = "Data Source=localhost;Initial Catalog=ModulynAuth;Integrated Security=True;Pooling=False;MultipleActiveResultSets=True;";
+
         public List<WebServerAuthSettings> AuthSettings { get; set; } = new List<WebServerAuthSettings>();
 
 
@@ -74,6 +76,11 @@ namespace Modulyn.Server.Bl
             if (node != null)
                 if (!string.IsNullOrEmpty(node.InnerText))
                     StartupPage = node.InnerText;
+
+            node = xmlNode.SelectSingleNode("Authentication/AuthDbConnectionString");
+            if (node != null)
+                if (!string.IsNullOrEmpty(node.InnerText))
+                    AuthDbConnectionString = node.InnerText;
 
             node = xmlNode.SelectSingleNode("Authentication/Enabled");
             if (node != null)

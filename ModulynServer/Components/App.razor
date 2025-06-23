@@ -27,12 +27,12 @@
         <link rel="stylesheet" href="@(module.ModuleId + ".styles.css")" />
     }
 
-    <RadzenTheme Theme="material" @rendermode="InteractiveServer" />
-    <HeadOutlet @rendermode="RenderMode.InteractiveServer" />
+    <RadzenTheme Theme="material" />
+    <HeadOutlet  />
 </head>
 
 <body>
-    <Routes @rendermode="RenderMode.InteractiveServer" />
+    <Routes />
     <script src="_framework/blazor.web.js"></script>
     <script src="_content/Radzen.Blazor/Radzen.Blazor.js?v=@(typeof(Radzen.Colors).Assembly.GetName().Version)"></script>
 </body>

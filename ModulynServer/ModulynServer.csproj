@@ -15,16 +15,27 @@
     <PackageReference Include="Azure.Identity" Version="1.14.0" />
     <PackageReference Include="Lumberjack" Version="0.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="8.0.16" />
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="8.0.17" />
 	<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.16" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="8.0.16" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.16" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="8.0.16" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.16">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.7" />
     <PackageReference Include="System.Formats.Asn1" Version="9.0.5" />
+    <PackageReference Include="System.Text.Json" Version="9.0.6" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\ModulynInterface\ModulynInterface.csproj" />
     <ProjectReference Include="..\ModulynServerBl\ModulynServerBl.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Data\" />
   </ItemGroup>
 
 </Project>
