@@ -26,8 +26,7 @@
 
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="flex-column">
-        <RadzenPanelMenu Style="background-color:transparent">
-            <ChildContent>
+        <RadzenPanelMenu Style="background-color:transparent" >
                 @if (ServerSettings.ShowHomeItem)
                 {
                     <NavElement NavItem="@(new WebServerNavItem(){NavItemName="Home", Target="", Icon=ServerSettings.SiteImage})" />
@@ -37,7 +36,6 @@
                 {
                     <NavElement NavItem="@navItem" />
                 }
-            </ChildContent>
         </RadzenPanelMenu>
     </nav>
 </div>

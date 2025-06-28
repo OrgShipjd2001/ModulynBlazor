@@ -1,4 +1,6 @@
-﻿namespace Modulyn.Server.Bl
+﻿using Modulyn.Server.Interface;
+
+namespace Modulyn.Server.Bl
 {
     public class WebServerNavItem
     {
@@ -7,6 +9,7 @@
         public string ModuleId { get; set; } = string.Empty;
         public string? Target { get; set; } = null;
         public string? Icon { get; set; } = null;
+        public ModulynAuthRole RequiredRole { get; set; } = 0;
 
         public bool Expanded { get; set; } = false;
 

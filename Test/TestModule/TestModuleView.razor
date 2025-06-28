@@ -1,7 +1,11 @@
 ﻿@page "/testmodule"
+@using Microsoft.AspNetCore.Authorization
+@using Modulyn.Server.Interface
+@attribute [ModulynAuthAttribute(ModulynAuthRole.Admin)]
 
 <PageTitle>Test Module View 1</PageTitle>
 
 <div class="my-component">
-    This component is defined in the <strong>TestModule</strong> library.
+    This component is defined in the <strong>TestModule</strong> library.<br />
+    Visible to Admins.
 </div>

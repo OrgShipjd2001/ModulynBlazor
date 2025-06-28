@@ -1,18 +1,55 @@
-﻿
-<RadzenPanelMenuItem class="item-with-icon" style="background-color:transparent" Text="@NavItem.NavItemName" Path="@NavItem.Target" Image="@NavItem.Icon" @bind-Expanded="NavItem.Expanded">
+﻿@using Microsoft.AspNetCore.Authorization
+@using ModulynServer.Handlers
+@inject IAuthorizationService AuthorizationService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject WebServerSettings svrSettings
 
-    <ChildContent>
-        @foreach (var subItem in NavItem.Children)
+<RadzenPanelMenuItem class="item-with-icon" style="background-color:transparent" Text="@NavItem.NavItemName" Path="@NavItem.Target" Image="@NavItem.Icon" @bind-Expanded="NavItem.Expanded" Click="OnItemClicked">
+        @foreach (var subItem in authorizedChildren)
         {
             <NavElement NavItem="@subItem" />
         }
-    </ChildContent>
-
 </RadzenPanelMenuItem>
 
 
 @code {
-    [Parameter]
+    [Parameter, EditorRequired]
     public WebServerNavItem NavItem{ get; set; }
 
+    private List<WebServerNavItem> authorizedChildren = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (svrSettings.Authentication)
+        {
+            authorizedChildren = new();
+            foreach (var subItem in NavItem.Children)
+            {
+                if (await IsAuthorizedAsync(subItem))
+                    authorizedChildren.Add(subItem);
+            }
+        }
+        else
+        {
+            authorizedChildren = NavItem.Children;
+        }
+    }
+
+    private async Task<bool> IsAuthorizedAsync(WebServerNavItem navItem)
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        // Build a requirement for this nav item
+        var requirement = new ModulynAuthRequirement(navItem.RequiredRole);
+
+        // Use your custom handler via the authorization service
+        var result = await AuthorizationService.AuthorizeAsync(user, null, requirement);
+        return result.Succeeded;
+    }
+
+    void OnItemClicked(MenuItemEventArgs args)
+    {
+        System.Diagnostics.Debug.WriteLine($"{args.Text} clicked");
+    }
 }

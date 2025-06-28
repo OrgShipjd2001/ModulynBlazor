@@ -1,34 +1,34 @@
-﻿@using System.Reflection
-@using ModulynServer.Components.Account.Shared
-@inject WebServerModuleManager ModuleManager
-@inject NavigationManager NavigationManager
+﻿@using System.Reflection  
+@using ModulynServer.Components.Account.Shared  
+@inject WebServerModuleManager ModuleManager  
+@inject NavigationManager NavigationManager  
 
+<CascadingAuthenticationState>
+    <CascadingBlazoredModel>  
+        <Router  
+                AppAssembly="typeof(Program).Assembly"  
+                AdditionalAssemblies="@GetModuleAssemblies()">  
+            <Found Context="routeData">  
+                <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">  
+                    <NotAuthorized>  
+                        <RedirectToLogin />  
+                    </NotAuthorized>  
+                </AuthorizeRouteView>  
+                <FocusOnNavigate RouteData="routeData" Selector="h1" />  
+            </Found>  
+        </Router>  
+    </CascadingBlazoredModel>  
+</CascadingAuthenticationState>
 
-<CascadingBlazoredModel>
-    <Router 
-            AppAssembly="typeof(Program).Assembly"
-            AdditionalAssemblies="@GetModuleAssemblies()">
-        <Found Context="routeData">
-            <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
-                <NotAuthorized>
-                    <RedirectToLogin />
-                </NotAuthorized>
-            </AuthorizeRouteView>
-            <FocusOnNavigate RouteData="routeData" Selector="h1" />
-        </Found>
-    </Router>
-</CascadingBlazoredModel>
+@code{  
+    public List<Assembly> GetModuleAssemblies()  
+    {  
+        List<Assembly> asmList = new List<Assembly>();  
+        foreach(IWebServerModule module in ModuleManager.GetModuleList())  
+        {  
+            asmList.Add(module.ModuleAssembly);  
+        }  
 
-@code{
-    
-    public List<Assembly> GetModuleAssemblies()
-    {
-        List<Assembly> asmList = new List<Assembly>();
-        foreach(IWebServerModule module in ModuleManager.GetModuleList())
-        {
-            asmList.Add(module.ModuleAssembly);
-        }
-
-        return asmList;
-    }
+        return asmList;  
+    }  
 }

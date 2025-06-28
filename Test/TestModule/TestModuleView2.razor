@@ -1,7 +1,11 @@
 ﻿@page "/testmodule2"
+@using Microsoft.AspNetCore.Authorization
+@using Modulyn.Server.Interface
+@attribute [ModulynAuthAttribute(ModulynAuthRole.PowerUser)]
 
 <PageTitle>Test Module View 2</PageTitle>
 
 <div class="my-component">
-    This second component view is defined in the <strong>TestModule</strong> library.
+    This second component view is defined in the <strong>TestModule</strong> library.<br />
+    Visible to Admins and Powerusers
 </div>

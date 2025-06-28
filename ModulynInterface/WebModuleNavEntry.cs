@@ -6,9 +6,11 @@
 
         public string NavItemName { get; set; } = string.Empty;
 
-        public string Target { get; set; } = null;
+        public string? Target { get; set; } = null;
 
-        public string Icon { get; set; } = null;
+        public string? Icon { get; set; } = null;
+
+        public ModulynAuthRole AuthenticationRole { get; set; } = 0;
 
         public WebModuleNavEntry()
         {
@@ -20,14 +22,19 @@
             NavItemName = navItemName;
         }
 
-        public WebModuleNavEntry(string navItemPath, string navItemName, string target) : this(navItemPath, navItemName)
+        public WebModuleNavEntry(string navItemPath, string navItemName, string? target) : this(navItemPath, navItemName)
         {
             Target = target;
         }
 
-        public WebModuleNavEntry(string navItemPath, string navItemName, string target, string icon) : this(navItemPath, navItemName, target)
+        public WebModuleNavEntry(string navItemPath, string navItemName, string? target, string icon) : this(navItemPath, navItemName, target)
         {
             Icon = icon;
+        }
+
+        public WebModuleNavEntry(string navItemPath, string navItemName, string? target, string icon, ModulynAuthRole role) : this(navItemPath, navItemName, target)
+        {
+            AuthenticationRole = role;
         }
     }
 }
