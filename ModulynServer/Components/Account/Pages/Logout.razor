@@ -1,0 +1,29 @@
+﻿@page "/Account/LogoutPage"
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Logging out...</PageTitle>
+
+<h1 class="text-center">Logging you out...</h1>
+<p class="text-center">Please wait while you are securely logged out.</p>
+
+<div class="nav-item px-3">
+    <form id="logoutform" action="Account/Logout" method="post">
+        <AntiforgeryToken /> 
+        <input type="hidden" name="ReturnUrl" value="/" />
+        <button type="submit" class="nav-link">
+            <span class="bi bi-arrow-bar-left-nav-menu" aria-hidden="true"></span> Logout
+        </button>
+    </form>
+</div>
+
+@code {
+    private bool _hasRendered = false;
+
+    protected override void OnInitialized()
+    {
+        
+        base.OnInitialized();
+    }
+
+}

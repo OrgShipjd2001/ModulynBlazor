@@ -1,4 +1,5 @@
 using Lumberjack.Interface;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -7,6 +8,7 @@ using Modulyn.Server.Bl;
 using Modulyn.Server.Interface;
 using ModulynServer.Components;
 using ModulynServer.Components.Account;
+using ModulynServer.Handlers;
 using Radzen;
 using System.Reflection;
 
@@ -36,8 +38,12 @@ namespace Modulyn.Server
             builder.Services.AddSingleton(WebServerSettings.Instance);
             builder.Services.AddSingleton(moduleManager);
 
-            ConfigureCoreAuthentication(builder);
-            ConfigureAuthenticationProviders(builder);
+            if (WebServerSettings.Instance.Authentication)
+            {
+                Logging.LogInfo("Authentication enabled", "Modulyn");
+                ConfigureCoreAuthentication(builder);
+                ConfigureAuthenticationProviders(builder);
+            }
 
             // Add module services
             foreach (IWebServerModule module in moduleManager.GetModuleList())
@@ -69,8 +75,12 @@ namespace Modulyn.Server
             Logging.LogInfo("Begin WebApplication part");
             WebApplication app = builder.Build();
 
-            await CreateSeedData(app);
-
+            if (WebServerSettings.Instance.Authentication)
+            {
+                Logging.LogInfo("Add Authentication Seed Data", "Modulyn");
+                await CreateSeedData(app);
+            }
+            
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
@@ -123,8 +133,14 @@ namespace Modulyn.Server
             }
 
             app.MapRazorComponents<App>().AddInteractiveServerRenderMode().AddAdditionalAssemblies(assemblies.ToArray());
-            // Add additional endpoints required by the Identity /Account Razor components.
-            app.MapAdditionalIdentityEndpoints();
+
+            if (WebServerSettings.Instance.Authentication)
+            {
+                app.UseAuthentication(); // Must be before UseAuthorization
+                app.UseAuthorization();
+                // Add additional endpoints required by the Identity /Account Razor components.
+                app.MapAdditionalIdentityEndpoints();
+            }
 
             app.Run();
         }
@@ -167,6 +183,17 @@ namespace Modulyn.Server
                 .AddDefaultTokenProviders();
 
             builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+
+            builder.Services.AddSingleton<IAuthorizationHandler, ModulynAuthHandler>();
+            builder.Services.AddSingleton<IAuthorizationPolicyProvider, ModulynAuthPolicyProvider>();
+
+            builder.Services.AddAuthorization(options =>
+            {
+                options.DefaultPolicy = new AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .AddRequirements(new ModulynAuthRequirement())
+                    .Build();
+            });
         }
 
         private static void ConfigureAuthenticationProviders(WebApplicationBuilder builder)
@@ -225,7 +252,7 @@ namespace Modulyn.Server
                 var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
                 // Seed roles
-                string[] roleNames = { "Admin", "User", "Manager" };
+                string[] roleNames = Enum.GetNames(typeof(ModulynAuthRole));
                 foreach (var roleName in roleNames)
                 {
                     if (!await roleManager.RoleExistsAsync(roleName))
@@ -236,7 +263,7 @@ namespace Modulyn.Server
 
                 // Seed admin user
                 string adminEmail = "admin@example.com";
-                string adminPassword = "admin$123"; // Use a strong password in production
+                string adminPassword = "Admin$123"; // Use a strong password in production
                 var adminUser = await userManager.FindByEmailAsync(adminEmail);
                 if (adminUser == null)
                 {

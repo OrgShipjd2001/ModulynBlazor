@@ -1,6 +1,8 @@
 ﻿@page "/"
+@using Microsoft.AspNetCore.Authorization
 @inject WebServerModuleManager moduleManager
 @inject NavigationManager NavigationManager
+@attribute [AllowAnonymous]
 
 <PageTitle>Home</PageTitle>
 

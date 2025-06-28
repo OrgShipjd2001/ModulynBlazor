@@ -1,10 +1,10 @@
 ﻿@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Identity
 @inherits LayoutComponentBase
-@implements IDisposable
-
+@inject WebServerSettings SvrSettings
 @inject NavigationManager NavigationManager
 
-<RadzenComponents/>
+<RadzenComponents />
 
 <div class="page">
     <div class="sidebar" style="@IconMenuCssClass">
@@ -13,26 +13,30 @@
 
     <main>
         <div class="top-row px-4" style="text-align:right">
-            <AuthorizeView>
-                <Authorized>
-                    <div class="nav-item px-3">
-                        <form action="Account/Logout" method="post">
-                            <AntiforgeryToken />
-                            <input type="hidden" name="ReturnUrl" value="@currentUrl" />
-                            <button type="submit" class="nav-link">
-                                <span class="bi bi-arrow-bar-left-nav-menu" aria-hidden="true"></span> Logout
-                            </button>
-                        </form>
-                    </div>
-                </Authorized>
-                <NotAuthorized>
-                    <div class="nav-item px-3">
-                        <NavLink class="nav-link" href="Account/Login">
-                            <span class="bi bi-person-badge-nav-menu" aria-hidden="true"></span> Login
-                        </NavLink>
-                    </div>
-                </NotAuthorized>
-            </AuthorizeView>
+            @if (SvrSettings.Authentication)
+            {
+                <AuthorizeView>
+                    <Authorized>
+                        <div class="nav-item px-3">
+                            @* <RadzenButton ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary" Text="Logout" Size="ButtonSize.Small" Click="@LogoutClick" /> *@
+                            <form action="Account/Logout" method="post">
+                                <AntiforgeryToken />
+                                <input type="hidden" name="ReturnUrl" value="/" />
+                                <button type="submit" class="nav-link">
+                                    <span class="bi bi-arrow-bar-left-nav-menu" aria-hidden="true"></span> Logout
+                                </button>
+                            </form>
+                        </div>
+                    </Authorized>
+                    <NotAuthorized>
+                        <div class="nav-item px-3">
+                            <NavLink class="nav-link" href="Account/Login">
+                                <span class="bi bi-person-badge-nav-menu" aria-hidden="true"></span> Login
+                            </NavLink>
+                        </div>
+                    </NotAuthorized>
+                </AuthorizeView>
+            }
         </div>
 
         <article class="content px-4">
@@ -47,8 +51,8 @@
     <a class="dismiss">🗙</a>
 </div>
 
+
 @code {
-    private string? currentUrl;
     private bool _iconMenuActive { get; set; }
     private string? IconMenuCssClass => _iconMenuActive ? "width: 80px;" : null;
 
@@ -57,20 +61,10 @@
         _iconMenuActive = iconMenuActive;
     }
 
-    protected override void OnInitialized()
+    private void LogoutClick()
     {
-        currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
-        NavigationManager.LocationChanged += OnLocationChanged;
-    }
-
-    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
-    {
-        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
-        StateHasChanged();
-    }
-
-    public void Dispose()
-    {
-        NavigationManager.LocationChanged -= OnLocationChanged;
+        // This is a simple way to trigger the logout action.
+        // You can also use a form submission or a direct API call if needed.
+        NavigationManager.NavigateTo("Account/LogoutPage", true);
     }
 }

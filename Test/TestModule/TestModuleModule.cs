@@ -23,9 +23,12 @@ namespace TestModule
         {
             List<IWebModuleNavEntry> retList = new List<IWebModuleNavEntry>();
 
-            retList.Add(new TestModuleNavItem(string.Empty, "Test Module", "/testmodule", Image));
-            retList.Add(new TestModuleNavItem("Test Module\\TestModule2\\Test1", "Test Module 2.1", "/testmodule2", "img/test.png"));
-            retList.Add(new TestModuleNavItem("Test Module\\TestModule2\\Test2", "Test Module 2.2", "/testmodule2", "img/test.png"));
+            retList.Add(new TestModuleNavItem(string.Empty, "Test Module", null, Image));
+            retList.Add(new TestModuleNavItem("Test Module", "Test1", null, "img/testbutton.png", ModulynAuthRole.Admin));
+            retList.Add(new TestModuleNavItem("Test Module\\Test1", "Test Module 1", "/testmodule", "img/testbutton.png", ModulynAuthRole.Admin));
+            retList.Add(new TestModuleNavItem("Test Module", "TestModule2", null, "img/testkeyboard.png", ModulynAuthRole.PowerUser));
+            retList.Add(new TestModuleNavItem("Test Module\\TestModule2", "Test2", null, "img/testkeyboard.png", ModulynAuthRole.PowerUser));
+            retList.Add(new TestModuleNavItem("Test Module\\TestModule2\\Test2", "Test Module 2.2", "/testmodule2", "img/testkeyboard.png", ModulynAuthRole.PowerUser));
 
             return retList;
         }

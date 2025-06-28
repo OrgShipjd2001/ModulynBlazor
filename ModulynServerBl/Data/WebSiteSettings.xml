@@ -3,7 +3,7 @@
 	<WebSiteName>Modulyn Server</WebSiteName>		<!-- display name of the web site -->
 	<SiteImage>modulynblazor.png</SiteImage>		<!-- url to the web site image -->
 	<ShowHomeItem>true</ShowHomeItem>			<!-- turns the site default home page on or off -->
-	<ModulesPath>Modules</ModulesPath>			<!-- Can be a full directory path or a subdirectory name -->
+	<ModulesPath>D:\GIT\GitHub\ModulynBlazor\Publish\Debug\Modules</ModulesPath>			<!-- Can be a full directory path or a subdirectory name -->
 	<StartupPage></StartupPage>					<!-- Override / redirect the home page to the set page -->
 	<Authentication>
 		<Enabled>true</Enabled>
@@ -27,8 +27,8 @@
 		<AuthSettings>
 			<Provider>Google</Provider>
 			<Enabled>false</Enabled>
-			<Property name="ClientId"></Property>
-			<Property name="ClientSecret"></Property>
+			<Property name="ClientId">941572082258-0higucb7ki30ghplq7if1ffugivfjmku.apps.googleusercontent.com</Property>
+			<Property name="ClientSecret">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</Property>
 		</AuthSettings>
 	</Authentication>
 </WebSiteSettings>
