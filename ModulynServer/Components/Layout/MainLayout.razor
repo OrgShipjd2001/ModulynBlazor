@@ -21,7 +21,7 @@
                             @* <RadzenButton ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary" Text="Logout" Size="ButtonSize.Small" Click="@LogoutClick" /> *@
                             <form action="Account/Logout" method="post">
                                 <AntiforgeryToken />
-                                <input type="hidden" name="ReturnUrl" value="/" />
+                                <input type="hidden" name="ReturnUrl" value="" />
                                 <button type="submit" class="nav-link">
                                     <span class="bi bi-arrow-bar-left-nav-menu" aria-hidden="true"></span> Logout
                                 </button>

@@ -124,7 +124,6 @@ namespace Modulyn.Server
             app.UseStaticFiles();
             app.UseRouting();
             app.MapControllers();
-            app.UseAntiforgery();
 
             List<Assembly> assemblies = new List<Assembly>();
             foreach (IWebServerModule module in moduleManager.GetModuleList())
@@ -138,6 +137,12 @@ namespace Modulyn.Server
             {
                 app.UseAuthentication(); // Must be before UseAuthorization
                 app.UseAuthorization();
+            }
+
+            app.UseAntiforgery();
+
+            if (WebServerSettings.Instance.Authentication)
+            {
                 // Add additional endpoints required by the Identity /Account Razor components.
                 app.MapAdditionalIdentityEndpoints();
             }
