@@ -131,14 +131,13 @@ namespace Modulyn.Server
                 assemblies.Add(module.ModuleAssembly);
             }
 
-            app.MapRazorComponents<App>().AddInteractiveServerRenderMode().AddAdditionalAssemblies(assemblies.ToArray());
-
             if (WebServerSettings.Instance.Authentication)
             {
                 app.UseAuthentication(); // Must be before UseAuthorization
                 app.UseAuthorization();
             }
 
+            app.MapRazorComponents<App>().AddInteractiveServerRenderMode().AddAdditionalAssemblies(assemblies.ToArray());
             app.UseAntiforgery();
 
             if (WebServerSettings.Instance.Authentication)

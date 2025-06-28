@@ -6,9 +6,11 @@ namespace ModulynServer.Handlers
 {
     public class ModulynAuthPolicyProvider : DefaultAuthorizationPolicyProvider
     {
-        public ModulynAuthPolicyProvider(IOptions<AuthorizationOptions> options) : base(options) { }
-
         private const string PolicyPrefix = "PageAccessPolicy:";
+
+        public ModulynAuthPolicyProvider(IOptions<AuthorizationOptions> options) : base(options) 
+        {
+        }
 
         public override async Task<AuthorizationPolicy?> GetPolicyAsync(string policyName)
         {
