@@ -6,6 +6,7 @@ using Modulyn.Server.Bl;
 
 namespace Modulyn.Server.RestApiControllers
 {
+    [ModulynAuthAttribute(ModulynAuthRole.PowerUser)]
     [Route("api/[controller]")]
     [ApiController]
     public class ModulesController : ControllerBase
