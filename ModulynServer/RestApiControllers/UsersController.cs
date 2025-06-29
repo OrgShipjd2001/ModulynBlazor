@@ -10,7 +10,7 @@ using ModulynServer.model;
 
 namespace ModulynServer.RestApiControllers
 {
-    [ModulynAuthAttribute(ModulynAuthRole.PowerUser)]
+    [ModulynAuthAttribute(ModulynAuthRole.Admin)]
     [ApiController]
     [Route("api/[controller]")]
     public class UsersController : ControllerBase
