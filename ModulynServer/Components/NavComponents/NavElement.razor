@@ -4,7 +4,7 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject WebServerSettings svrSettings
 
-<RadzenPanelMenuItem class="item-with-icon" style="background-color:transparent" Text="@NavItem.NavItemName" Path="@NavItem.Target" Image="@NavItem.Icon" @bind-Expanded="NavItem.Expanded" Click="OnItemClicked">
+<RadzenPanelMenuItem class="item-with-icon" style="background-color:transparent" Visible="@elementVisible" Text="@NavItem.NavItemName" Path="@NavItem.Target" Image="@NavItem.Icon" @bind-Expanded="NavItem.Expanded" Click="OnItemClicked">
         @foreach (var subItem in authorizedChildren)
         {
             <NavElement NavItem="@subItem" />
@@ -16,17 +16,23 @@
     [Parameter, EditorRequired]
     public WebServerNavItem NavItem{ get; set; }
 
+    private bool elementVisible = true;
+
     private List<WebServerNavItem> authorizedChildren = new();
 
     protected override async Task OnInitializedAsync()
     {
         if (svrSettings.Authentication)
         {
-            authorizedChildren = new();
-            foreach (var subItem in NavItem.Children)
+            elementVisible = await IsAuthorizedAsync(NavItem);
+            if (elementVisible)
             {
-                if (await IsAuthorizedAsync(subItem))
-                    authorizedChildren.Add(subItem);
+                authorizedChildren = new();
+                foreach (var subItem in NavItem.Children)
+                {
+                    if (await IsAuthorizedAsync(subItem))
+                        authorizedChildren.Add(subItem);
+                }
             }
         }
         else

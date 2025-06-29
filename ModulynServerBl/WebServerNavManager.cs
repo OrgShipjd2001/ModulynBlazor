@@ -184,6 +184,12 @@ namespace Modulyn.Server.Bl
             if (xmlnode.Attributes["Icon"] != null)
                 navItem.Icon = xmlnode.Attributes["Icon"].Value;
 
+            if (xmlnode.Attributes["RequiredRole"] != null)
+            {
+                if (Enum.TryParse(xmlnode.Attributes["RequiredRole"].Value, true, out ModulynAuthRole role))
+                    navItem.RequiredRole = role;
+            }
+
             if (parent != null)
             {
                 navItem.NavItemPath = parent.NavItemPath + "\\" + navItem.NavItemName;

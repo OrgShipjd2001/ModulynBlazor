@@ -36,6 +36,12 @@
                 {
                     <NavElement NavItem="@navItem" />
                 }
+
+                @if (ServerSettings.Authentication)
+                {
+                    
+                    <NavElement NavItem="@(GetAdminNav())" />
+                }
         </RadzenPanelMenu>
     </nav>
 </div>
@@ -57,4 +63,25 @@
         await ShowIconMenu.InvokeAsync(IconMenuActive);
     }
 
+    private WebServerNavItem GetAdminNav()
+    {
+        WebServerNavItem adminNav = new WebServerNavItem()
+        {
+            NavItemPath = string.Empty,
+            NavItemName = "Admin",
+            RequiredRole = ModulynAuthRole.Admin
+        };
+
+        WebServerNavItem userMgr = new WebServerNavItem()
+        {
+            NavItemPath = "Admin",
+            NavItemName = "User Management",
+            Target = "/usermanagement",
+            RequiredRole = ModulynAuthRole.Admin
+        };
+        userMgr.Parent = adminNav;
+        adminNav.Children.Add(userMgr);
+
+        return adminNav;
+    }
 }
