@@ -35,7 +35,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Components\Admin\" />
     <Folder Include="Data\" />
+    <Folder Include="model\" />
   </ItemGroup>
 
 </Project>
