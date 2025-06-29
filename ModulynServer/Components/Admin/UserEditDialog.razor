@@ -1,0 +1,103 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using Modulyn.Server.Interface
+@using ModulynServer.model
+
+@inject Radzen.DialogService DialogService
+@inject Radzen.NotificationService NotificationService
+@inject UserManager<ApplicationUser> _userManager
+@inject RoleManager<IdentityRole> _roleManager
+
+<RadzenTemplateForm TItem="ApplicationUser" Data="@User" Submit="@HandleSubmit">
+    <div class="rz-p-4">
+        <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
+            <div>
+                <RadzenText Text="Username" />
+                <RadzenTextBox @bind-Value="@User.UserName" Class="w-100" Name="Username" Required="true" />
+                <RadzenRequiredValidator Component="Username" Text="Username is required" Popup="true" />
+            </div>
+            <div>
+                <RadzenText Text="Email" />
+                <RadzenTextBox @bind-Value="@User.Email" Class="w-100" Name="Email" Type="Email" Required="true" />
+                <RadzenRequiredValidator Component="Email" Text="Email is required" Popup="true" />
+                <RadzenEmailValidator Component="Email" Text="Invalid email format" Popup="true" />
+            </div>
+            @if (string.IsNullOrEmpty(User.Id)) // Only ask for password when adding new user
+            {
+                <div>
+                    <RadzenText Text="Password" />
+                    <RadzenTextBox @bind-Value="@password" Class="w-100" Name="Password" Type="Password" Required="true" />
+                    <RadzenRequiredValidator Component="Password" Text="Password is required for new users" Popup="true" />
+                </div>
+            }
+            <div>
+                <RadzenText Text="Role" />
+                <RadzenDropDown TValue="string" @bind-Value="@userRole" Data="@availaleRoleNames"
+                                Class="w-100" Name="Role" AllowClear="false" />
+            </div>
+        </RadzenStack>
+    </div>
+    <div class="rz-p-4 rz-pt-0 d-flex justify-content-end">
+        <RadzenButton ButtonType="ButtonType.Submit" Text="@(string.IsNullOrEmpty(User.Id) ? "Add User" : "Save Changes")" Icon="save" ButtonStyle="ButtonStyle.Primary" Class="rz-mr-2" />
+        <RadzenButton Text="Cancel" Icon="cancel" ButtonStyle="ButtonStyle.Light" Click="@Cancel" />
+    </div>
+</RadzenTemplateForm>
+
+@code {
+    [Parameter]
+    public ApplicationUser User { get; set; } = new ApplicationUser();
+
+    private string password;
+    private string userRole;
+    private List<string> availaleRoleNames = new List<string>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        foreach(IdentityRole role in _roleManager.Roles)
+        {
+            availaleRoleNames.Add(role.Name);
+        }
+
+        IList<string> userRoles = await _userManager.GetRolesAsync(User);
+        userRole = userRoles.FirstOrDefault() ?? ModulynAuthRole.User.ToString(); // Default to "User" if no roles assigned)
+    }
+
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(User.Id))
+            {
+                await _userManager.CreateAsync(User, password);
+            }
+            else
+            {
+                // Update existing user
+                await _userManager.UpdateAsync(User);
+            }
+
+            bool roleAlreadyAssigned = false;
+            foreach(string roleName in await _userManager.GetRolesAsync(User))
+            {
+                if (!roleName.Equals(userRole))
+                    await _userManager.RemoveFromRoleAsync(User, roleName);
+                else
+                    roleAlreadyAssigned = true;
+            }
+
+            if (!roleAlreadyAssigned)
+                await _userManager.AddToRoleAsync(User, userRole); // Assign role to new user
+
+            DialogService.Close(true); // Close dialog and indicate success
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Error", Detail = $"An unexpected error occurred: {ex.Message}" });
+            DialogService.Close(false);
+        }
+    }
+
+    private void Cancel()
+    {
+        DialogService.Close(false); // Close dialog without saving
+    }
+}

@@ -1,0 +1,139 @@
+﻿@page "/usermanagement"
+@using Microsoft.AspNetCore.Identity
+@using Modulyn.Server.Interface
+@using ModulynServer.model
+@attribute [ModulynAuthAttribute(ModulynAuthRole.PowerUser)]
+
+@inject Radzen.DialogService DialogService
+@inject Radzen.NotificationService NotificationService
+@inject UserManager<ApplicationUser> _userManager
+@inject RoleManager<IdentityRole> _roleManager
+
+<RadzenText Text="User Management" TextType="TextType.H1" Class="rz-mb-4" />
+
+<div class="rz-mb-4 d-flex justify-content-end">
+    <RadzenButton Text="Add New User" Icon="person_add" Click="@(async () => await OpenUserDialog(null))" ButtonStyle="ButtonStyle.Primary" />
+</div>
+
+@if (users == null)
+{
+    <p><em>Loading users...</em></p>
+}
+else
+{
+    <RadzenDataGrid Data="@users" TItem="ApplicationUser" AllowSorting="true" AllowFiltering="true"
+                    PageSize="10" AllowPaging="true"
+                    EmptyText="No users found."
+                    Density="Density.Compact">
+        <Columns>
+            <RadzenDataGridColumn TItem="ApplicationUser" Property="Id" Title="ID" Width="80px" Visible="false" />
+            <RadzenDataGridColumn TItem="ApplicationUser" Property="UserName" Title="Username" Width="200px" />
+            <RadzenDataGridColumn TItem="ApplicationUser" Property="Email" Title="Email" Width="250px" />
+            <RadzenDataGridColumn TItem="ApplicationUser" Title="Role" Width="150px">
+                <Template Context="user">
+                    @if (user != null)
+                    {
+                        if (userRoles.ContainsKey(user.Id))
+                        {
+                            string role = userRoles[user.Id];
+                            <span>@(role)</span>
+                        }
+                        else
+                        {
+                            <span>No Role</span> <!-- Default role if none assigned -->
+                        }
+                    }
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ApplicationUser" Title="Actions" Width="120px" TextAlign="TextAlign.Center" Frozen="true">
+                <Template Context="user">
+                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Info" Class="rz-mr-2"
+                                  Click="@(async () => await OpenUserDialog(user))" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" />
+                    <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger"
+                                  Click="@(async () => await DeleteUser(user))" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" />
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+}
+
+@code {
+    private List<ApplicationUser> users;
+    private Dictionary<string, string> userRoles = new Dictionary<string, string>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUsers();
+    }
+
+    private async Task LoadUsers()
+    {
+        try
+        {
+            if (users != null)
+                users.Clear();
+
+            if (userRoles != null)
+                userRoles.Clear();
+
+            users = _userManager.Users.ToList();
+            foreach(ApplicationUser user in users)
+            {
+                string role = await GetUserRole(user);
+                userRoles[user.Id] = !string.IsNullOrWhiteSpace(role) ? role : "No Role"; // Default role if none assigned
+            }
+        }
+        catch (Exception ex) 
+        {
+            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Error", Detail = $"Could not load users: {ex.Message}" });
+            users = new List<ApplicationUser>();
+        }
+    }
+
+    private async Task OpenUserDialog(ApplicationUser userToEdit)
+    {
+        var dialogTitle = userToEdit == null ? "Add New User" : "Edit User";
+        ApplicationUser userEditDto = userToEdit != null ?
+            userToEdit :
+            new ApplicationUser(); // Default role for new users
+
+        var result = await DialogService.OpenAsync<UserEditDialog>(dialogTitle,
+            new Dictionary<string, object>() { { "User", userEditDto } },
+            new DialogOptions() { Width = "500px", Height = "auto", CloseDialogOnEsc = true, Resizable = false, Draggable = true });
+
+        if (result != null && (bool)result) // Dialog returns true if saved successfully
+        {
+            await LoadUsers(); // Reload users after add/edit
+            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Success, Summary = "Success", Detail = $"User {(userToEdit == null ? "added" : "updated")} successfully!" });
+            StateHasChanged();
+        }
+        else if (result != null && !(bool)result) // Dialog returns false if action failed
+        {
+            // UserEditDialog should handle its own notifications for API errors
+        }
+        // If result is null, dialog was closed without action (e.g., by pressing Esc or Close button)
+    }
+
+    private async Task DeleteUser(ApplicationUser userToDelete)
+    {
+        var result = await DialogService.Confirm($"Are you sure you want to delete user '{userToDelete.UserName}'?", "Confirm Deletion", new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
+
+        if (result == true)
+        {
+            try
+            {
+                await _userManager.DeleteAsync(userToDelete);
+            }
+            catch (Exception ex)
+            {
+                NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Error", Detail = $"Could not delete user: {ex.Message}" });
+            }
+        }
+    }
+
+    private async Task<string> GetUserRole(ApplicationUser user)
+    {
+        IList<string> roles = await _userManager.GetRolesAsync(user);
+        return roles.Count > 0 ? roles[0] : string.Empty; // Default role if none assigned
+    }
+}
