@@ -10,10 +10,17 @@
     <Title>Modulyn Server</Title>
     <PackageIcon>ModulynBlazor.jpg</PackageIcon>
   </PropertyGroup>
+	
+  <ItemGroup>
+    <Compile Remove="Data\**" />
+    <Content Remove="Data\**" />
+    <EmbeddedResource Remove="Data\**" />
+    <None Remove="Data\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Azure.Identity" Version="1.14.0" />
-    <PackageReference Include="Lumberjack" Version="0.0.2" />
+    <PackageReference Include="Lumberjack" Version="0.0.7" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="8.0.16" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="8.0.17" />
 	<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.16" />
@@ -32,10 +39,6 @@
   <ItemGroup>
     <ProjectReference Include="..\ModulynInterface\ModulynInterface.csproj" />
     <ProjectReference Include="..\ModulynServerBl\ModulynServerBl.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Data\" />
   </ItemGroup>
 
 </Project>
