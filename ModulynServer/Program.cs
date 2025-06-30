@@ -118,6 +118,12 @@ namespace Modulyn.Server
                     providerList.Add(provider);
                 }
             }
+            else
+            {
+                Logging.LogInfo("Adding existing file provider: " + app.Environment.WebRootFileProvider.GetType().Name, "Modulyn");
+                providerList.Add(app.Environment.WebRootFileProvider);
+            }
+
             bool providerListChanged = false;
             foreach(IWebServerModule module in moduleManager.GetModuleList())
             {
