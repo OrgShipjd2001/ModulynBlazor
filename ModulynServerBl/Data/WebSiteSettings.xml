@@ -6,7 +6,7 @@
 	<ModulesPath>D:\GIT\GitHub\ModulynBlazor\Publish\Debug\Modules</ModulesPath>			<!-- Can be a full directory path or a subdirectory name -->
 	<StartupPage></StartupPage>					<!-- Override / redirect the home page to the set page -->
 	<Authentication>
-		<Enabled>false</Enabled>
+		<Enabled>true</Enabled>
 		<AuthDbConnectionString>Data Source=DBServer;Initial Catalog=ModulynAuth;Integrated Security=True;Pooling=False;MultipleActiveResultSets=True;Encrypt=False</AuthDbConnectionString>
 		<AuthSettings>
 			<Provider>Local</Provider>

@@ -69,6 +69,7 @@
         {
             NavItemPath = string.Empty,
             NavItemName = "Admin",
+            Icon = "admin_panel_settings",
             RequiredRole = ModulynAuthRole.Admin
         };
 
@@ -77,6 +78,7 @@
             NavItemPath = "Admin",
             NavItemName = "User Management",
             Target = "/usermanagement",
+            Icon = "manage_accounts",
             RequiredRole = ModulynAuthRole.Admin
         };
         userMgr.Parent = adminNav;
