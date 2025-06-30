@@ -45,6 +45,17 @@ namespace Modulyn.Server
                 ConfigureAuthenticationProviders(builder);
             }
 
+            // Authentication must always be configured, even if authentication is disabled
+            builder.Services.AddSingleton<IAuthorizationHandler, ModulynAuthHandler>();
+            builder.Services.AddSingleton<IAuthorizationPolicyProvider, ModulynAuthPolicyProvider>();
+            builder.Services.AddAuthorization(options =>
+            {
+                options.DefaultPolicy = new AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .AddRequirements(new ModulynAuthRequirement())
+                    .Build();
+            });
+
             // Add module services
             foreach (IWebServerModule module in moduleManager.GetModuleList())
             {
@@ -134,8 +145,8 @@ namespace Modulyn.Server
             if (WebServerSettings.Instance.Authentication)
             {
                 app.UseAuthentication(); // Must be before UseAuthorization
-                app.UseAuthorization();
             }
+            app.UseAuthorization();
 
             app.MapRazorComponents<App>().AddInteractiveServerRenderMode().AddAdditionalAssemblies(assemblies.ToArray());
             app.UseAntiforgery();
@@ -187,17 +198,6 @@ namespace Modulyn.Server
                 .AddDefaultTokenProviders();
 
             builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
-
-            builder.Services.AddSingleton<IAuthorizationHandler, ModulynAuthHandler>();
-            builder.Services.AddSingleton<IAuthorizationPolicyProvider, ModulynAuthPolicyProvider>();
-
-            builder.Services.AddAuthorization(options =>
-            {
-                options.DefaultPolicy = new AuthorizationPolicyBuilder()
-                    .RequireAuthenticatedUser()
-                    .AddRequirements(new ModulynAuthRequirement())
-                    .Build();
-            });
         }
 
         private static void ConfigureAuthenticationProviders(WebApplicationBuilder builder)
