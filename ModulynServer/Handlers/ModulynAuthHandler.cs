@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
+using Modulyn.Server.Bl;
 using Modulyn.Server.Interface;
 using System.Security.Claims;
 
@@ -9,6 +10,12 @@ namespace ModulynServer.Handlers
     {
         protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, ModulynAuthRequirement requirement)
         {
+            if (WebServerSettings.Instance.Authentication == false)
+            {
+                context.Succeed(requirement);
+                return Task.CompletedTask;
+            }
+
             ModulynAuthRole roleToCheck = requirement.RequiredRole;
 
             // Try to get RouteData (Blazor scenario)
