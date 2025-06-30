@@ -106,13 +106,26 @@ namespace Modulyn.Server
 
             // Add the module specific files, middleware, etc.
             List<IFileProvider> providerList = new List<IFileProvider>();
-            providerList.Add(app.Environment.WebRootFileProvider);
+            if (app.Environment.WebRootFileProvider is CompositeFileProvider)
+            {
+                foreach (IFileProvider provider in ((CompositeFileProvider)app.Environment.WebRootFileProvider).FileProviders)
+                {
+                    if (provider is PhysicalFileProvider)
+                        Logging.LogInfo("Adding existing file provider: " + provider.GetType().Name + " Path: " + ((PhysicalFileProvider)provider).Root, "Modulyn");
+                    else
+                        Logging.LogInfo("Adding existing file provider: " + provider.GetType().Name, "Modulyn");
+
+                    providerList.Add(provider);
+                }
+            }
+            bool providerListChanged = false;
             foreach(IWebServerModule module in moduleManager.GetModuleList())
             {
+                providerListChanged = true;
                 PhysicalFileProvider moduleProvider = new PhysicalFileProvider(Path.Combine(Path.GetDirectoryName(module.ModuleAssembly.Location), "wwwroot"));
                 if (moduleProvider.GetDirectoryContents(string.Empty).Exists)
                 {
-                    Logging.LogInfo("Adding module file provider: " + module.ModuleId, "Modulyn");
+                    Logging.LogInfo("Adding module file provider: " + module.ModuleId + " Path: " + moduleProvider.Root, "Modulyn");
                     providerList.Add(moduleProvider);
                 }
 
@@ -130,7 +143,8 @@ namespace Modulyn.Server
                     app.UseWebSockets();
                 }
             }
-            app.Environment.WebRootFileProvider = new CompositeFileProvider(providerList);
+            if (providerListChanged)
+                app.Environment.WebRootFileProvider = new CompositeFileProvider(providerList);
 
             app.UseStaticFiles();
             app.UseRouting();
