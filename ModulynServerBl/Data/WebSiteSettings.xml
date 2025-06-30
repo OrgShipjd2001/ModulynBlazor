@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <WebSiteSettings>
 	<WebSiteName>Modulyn Server</WebSiteName>		<!-- display name of the web site -->
-	<SiteImage>modulynblazor.png</SiteImage>		<!-- url to the web site image -->
+	<SiteImage>ModulynBlazor.jpg</SiteImage>		<!-- url to the web site image -->
 	<ShowHomeItem>true</ShowHomeItem>			<!-- turns the site default home page on or off -->
 	<ModulesPath>D:\GIT\GitHub\ModulynBlazor\Publish\Debug\Modules</ModulesPath>			<!-- Can be a full directory path or a subdirectory name -->
 	<StartupPage></StartupPage>					<!-- Override / redirect the home page to the set page -->
@@ -10,7 +10,7 @@
 		<AuthDbConnectionString>Data Source=DBServer;Initial Catalog=ModulynAuth;Integrated Security=True;Pooling=False;MultipleActiveResultSets=True;Encrypt=False</AuthDbConnectionString>
 		<AuthSettings>
 			<Provider>Local</Provider>
-			<Enabled>false</Enabled>
+			<Enabled>true</Enabled>
 		</AuthSettings>
 		<AuthSettings>
 			<Provider>EntraId</Provider>
@@ -22,7 +22,7 @@
 		</AuthSettings>
 		<AuthSettings>
 			<Provider>Google</Provider>
-			<Enabled>false</Enabled>
+			<Enabled>true</Enabled>
 			<Property name="ClientId">941572082258-0higucb7ki30ghplq7if1ffugivfjmku.apps.googleusercontent.com</Property>
 			<Property name="ClientSecret">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</Property>
 		</AuthSettings>
