@@ -1,0 +1,244 @@
+<<<<<<< HEAD
+using Microsoft.Extensions.FileProviders;
+using Radzen;
+using ModulynServer.Components;
+using Modulyn.Server.Bl;
+using Modulyn.Server.Interface;
+=======
+using Lumberjack.Interface;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
+using Modulyn.Server.Bl;
+using Modulyn.Server.Interface;
+using ModulynServer.Components;
+using ModulynServer.Components.Account;
+using Radzen;
+>>>>>>> 54937d7 (first draft authentication)
+using System.Reflection;
+
+namespace Modulyn.Server
+{
+    public class Program
+    {
+        public static async Task Main(string[] args)
+        {
+            WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+            WebServerModuleManager moduleManager = new WebServerModuleManager();
+
+            // Add services to the container.
+            builder.Services.AddRazorComponents().AddInteractiveServerComponents();
+            builder.Services.AddRadzenComponents();
+            builder.Services.AddControllers();
+            builder.Services.AddSingleton(WebServerSettings.Instance);
+            builder.Services.AddSingleton(moduleManager);
+
+<<<<<<< HEAD
+=======
+            ConfigureCoreAuthentication(builder);
+            ConfigureAuthenticationProviders(builder);
+
+>>>>>>> 54937d7 (first draft authentication)
+            // Add module services
+            foreach (IWebServerModule module in moduleManager.GetModuleList())
+            {
+                builder.Services.AddControllers().AddApplicationPart(module.ModuleAssembly);
+
+                List<ModuleBuilderService>? services = module.GetWebBuilderServices();
+                if(services != null)
+                {
+                    foreach (ModuleBuilderService service in services)
+                    {
+                        switch (service.ServiceScope)
+                        {
+                            case WebServiceScope.Singleton:
+                                builder.Services.AddSingleton(service.ServiceType, service.Service);
+                                break;
+                            case WebServiceScope.Transient:
+                                builder.Services.AddTransient(service.ServiceType);
+                                break;
+                            case WebServiceScope.Scoped:
+                                builder.Services.AddScoped(service.ServiceType);
+                                break;
+                        }
+                    }
+                }
+            }
+
+            WebApplication app = builder.Build();
+<<<<<<< HEAD
+            
+=======
+
+            await CreateSeedData(app);
+
+>>>>>>> 54937d7 (first draft authentication)
+            // Configure the HTTP request pipeline.
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseMigrationsEndPoint();
+            }
+            else
+            {
+                app.UseExceptionHandler("/Error");
+                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+                app.UseHsts();
+            }
+
+            // Add the module folders to the file provider
+            List<IFileProvider> providerList = new List<IFileProvider>();
+            providerList.Add(app.Environment.WebRootFileProvider);
+            foreach(IWebServerModule module in moduleManager.GetModuleList())
+            {
+                PhysicalFileProvider moduleProvider = new PhysicalFileProvider(Path.Combine(Path.GetDirectoryName(module.ModuleAssembly.Location), "wwwroot"));
+                providerList.Add(moduleProvider);
+            }
+            app.Environment.WebRootFileProvider = new CompositeFileProvider(providerList);
+
+            app.UseStaticFiles();
+            app.UseRouting();
+            app.MapControllers();
+            app.UseAntiforgery();
+
+            List<Assembly> assemblies = new List<Assembly>();
+            foreach (IWebServerModule module in moduleManager.GetModuleList())
+            {
+                assemblies.Add(module.ModuleAssembly);
+            }
+
+            app.MapRazorComponents<App>().AddInteractiveServerRenderMode().AddAdditionalAssemblies(assemblies.ToArray());
+<<<<<<< HEAD
+            
+            app.Run();
+=======
+            // Add additional endpoints required by the Identity /Account Razor components.
+            app.MapAdditionalIdentityEndpoints();
+
+            app.Run();
+        }
+
+        private static void ConfigureCoreAuthentication(WebApplicationBuilder builder)
+        {
+            WebServerSettings settings = WebServerSettings.Instance;
+
+            builder.Services.AddCascadingAuthenticationState();
+            builder.Services.AddScoped<IdentityUserAccessor>();
+            builder.Services.AddScoped<IdentityRedirectManager>();
+            builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
+
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultScheme = IdentityConstants.ApplicationScheme;
+                options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
+            })
+                .AddIdentityCookies();
+
+            var connectionString = settings.AuthDbConnectionString;
+            builder.Services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseSqlServer(connectionString));
+            builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+
+            builder.Services.AddIdentityCore<ApplicationUser>(
+                options =>
+                {
+                    options.SignIn.RequireConfirmedAccount = true;
+                    options.Password.RequireDigit = true;
+                    options.Password.RequiredLength = 8;
+                    options.Password.RequireNonAlphanumeric = false;
+                    options.Password.RequireUppercase = true;
+                    options.Password.RequireLowercase = true;
+                    options.Password.RequiredUniqueChars = 1;
+                })
+                .AddRoles<IdentityRole>()
+                .AddEntityFrameworkStores<ApplicationDbContext>()
+                .AddSignInManager()
+                .AddDefaultTokenProviders();
+
+            builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+        }
+
+        private static void ConfigureAuthenticationProviders(WebApplicationBuilder builder)
+        {
+            WebServerSettings settings = WebServerSettings.Instance;
+            foreach (WebServerAuthSettings auth in settings.AuthSettings)
+            {
+                if ((auth.Provider.Equals("entraid", StringComparison.OrdinalIgnoreCase)) && auth.Enabled)
+                {
+                    string instance = auth.Properties["Instance"];
+                    string tenantId = auth.Properties["TenantId"];
+                    string clientId = auth.Properties["ClientId"];
+                    string clientSecret = auth.Properties["ClientSecret"];
+                    builder.Services.AddAuthentication().AddOpenIdConnect("EntraID", options =>
+                    {
+                        options.Authority = $"https://login.microsoftonline.com/{tenantId}";
+                        options.ClientId = clientId;
+                        options.ClientSecret = clientSecret;
+                        options.ResponseType = "code";
+                        options.SaveTokens = true;
+                        options.RequireHttpsMetadata = false;
+                        // Add other scopes as needed
+                    }).AddCookie();
+                }
+
+                if ((auth.Provider.Equals("google", StringComparison.OrdinalIgnoreCase)) && auth.Enabled)
+                {
+                    string clientId = auth.Properties["ClientId"];
+                    string clientSecret = auth.Properties["ClientSecret"];
+                    builder.Services.AddAuthentication().AddGoogle(options =>
+                    {
+                        options.ClientId = clientId;
+                        options.ClientSecret = clientSecret;
+                    });
+                }
+
+                if ((auth.Provider.Equals("microsoftaccount", StringComparison.OrdinalIgnoreCase)) && auth.Enabled)
+                {
+                    string clientId = auth.Properties["ClientId"];
+                    string clientSecret = auth.Properties["ClientSecret"];
+                    builder.Services.AddAuthentication().AddMicrosoftAccount(options =>
+                    {
+                        options.ClientId = clientId;
+                        options.ClientSecret = clientSecret;
+                    });
+                }
+            }
+        }
+
+        private static async Task CreateSeedData(WebApplication app)
+        {
+            // Seed roles and admin user
+            using (var scope = app.Services.CreateScope())
+            {
+                var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+                var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+                // Seed roles
+                string[] roleNames = { "Admin", "User", "Manager" };
+                foreach (var roleName in roleNames)
+                {
+                    if (!await roleManager.RoleExistsAsync(roleName))
+                    {
+                        await roleManager.CreateAsync(new IdentityRole(roleName));
+                    }
+                }
+
+                // Seed admin user
+                string adminEmail = "admin@example.com";
+                string adminPassword = "admin$123"; // Use a strong password in production
+                var adminUser = await userManager.FindByEmailAsync(adminEmail);
+                if (adminUser == null)
+                {
+                    adminUser = new ApplicationUser { UserName = adminEmail, Email = adminEmail, EmailConfirmed = true };
+                    var result = await userManager.CreateAsync(adminUser, adminPassword);
+                    if (result.Succeeded)
+                    {
+                        await userManager.AddToRoleAsync(adminUser, "Admin");
+                    }
+                }
+            }
+>>>>>>> 54937d7 (first draft authentication)
+        }
+    }
+}

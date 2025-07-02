@@ -32,7 +32,7 @@
             Icon = icon;
         }
 
-        public WebModuleNavEntry(string navItemPath, string navItemName, string? target, string icon, ModulynAuthRole role) : this(navItemPath, navItemName, target)
+        public WebModuleNavEntry(string navItemPath, string navItemName, string? target, string icon, ModulynAuthRole role) : this(navItemPath, navItemName, target, icon)
         {
             AuthenticationRole = role;
         }

@@ -6,33 +6,38 @@
 
 <PageTitle>Home</PageTitle>
 
-<h1>Weclome to @WebServerSettings.Instance.SiteName</h1>
-
-<p>Select an item in the navigation area on the left to get started.</p>
-
-<div class="container">
+<div class="container-fluid">
     <div class="row">
         <div class="col-md-12">
-            <RadzenCard class="rz-p-4" Variant="Variant.Outlined">
-                <RadzenText class="rz-border-bottom">Installed Modules:</RadzenText>
-                <RadzenCarousel @ref=carousel @bind-SelectedIndex="@selectedIndex" Auto="@auto" Interval="@interval" PagerOverlay="false" ButtonShade="Shade.Default" Style="height:500px">
+            <h1>Weclome to @WebServerSettings.Instance.SiteName</h1>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <p>Select an item in the navigation area on the left to get started.</p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <RadzenCard class="rz-p-3" Variant="Variant.Outlined">
+                <RadzenText class="rz-border-bottom rz-p-1" Style="background-color:#D8D2C2">Installed Modules:</RadzenText>
+                <RadzenCarousel @ref=carousel @bind-SelectedIndex="@selectedIndex" Auto="@auto"
+                                Interval="@interval" PagerOverlay="false" ButtonShade="Shade.Default" Style="height:500px">
                     <Items>
                         @foreach (IWebServerModule module in moduleList)
                         {
                             <RadzenCarouselItem>
-                                <RadzenCard class="rz-w-75">
-                                    <RadzenStack Orientation="Orientation.Vertical">
-                                        <RadzenStack class="rz-border-bottom" Orientation="Orientation.Horizontal">
+                                <RadzenCard class="rz-w-75 rz-shadow-3" Style="height:275px;max-width: 700px">
+                                    <div class="rz-background-color-base-light rz-p-2">
                                         @if (!string.IsNullOrEmpty(module.Image))
                                         {
-                                            <img src="@module.Image" style="width: 50px; height: 50px;" />
+                                            <RadzenImage Path="@module.Image" style="width: 50px; height: 50px;" />
                                         }
-                                        <RadzenLabel Text="Module:" />@module.ModuleId
-                                        </RadzenStack>
-                                        <RadzenStack>
-                                            @module.Description
-                                        </RadzenStack>
-                                    </RadzenStack>
+                                        <RadzenText TextStyle="TextStyle.Body1"><b>@("Module: " + @module.ModuleId.Trim())</b></RadzenText>
+                                    </div>
+                                    <div>
+                                        <RadzenText TextStyle="TextStyle.Body1">@module.Description.Trim()</RadzenText>
+                                    </div>
                                 </RadzenCard>
                             </RadzenCarouselItem>
                         }
