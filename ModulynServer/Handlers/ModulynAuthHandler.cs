@@ -18,6 +18,13 @@ namespace ModulynServer.Handlers
 
             ModulynAuthRole roleToCheck = requirement.RequiredRole;
 
+            if (roleToCheck == ModulynAuthRole.Anonymous)
+            {
+                // If the required role is Anonymous, skip further checks
+                context.Succeed(requirement);
+                return Task.CompletedTask;
+            }
+
             // Try to get RouteData (Blazor scenario)
             var routeData = context.Resource as Microsoft.AspNetCore.Components.RouteData;
             if (routeData != null)

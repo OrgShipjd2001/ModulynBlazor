@@ -141,6 +141,8 @@
             {
                 Logger.LogInformation("User created an account using {Name} provider.", externalLoginInfo.LoginProvider);
 
+                await UserManager.AddToRoleAsync(user, ModulynAuthRole.User.ToString());
+
                 var userId = await UserManager.GetUserIdAsync(user);
                 var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
                 code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));

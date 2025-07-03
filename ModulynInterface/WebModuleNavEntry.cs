@@ -10,7 +10,7 @@
 
         public string? Icon { get; set; } = null;
 
-        public ModulynAuthRole AuthenticationRole { get; set; } = 0;
+        public ModulynAuthRole AuthenticationRole { get; set; } = ModulynAuthRole.User;
 
         public WebModuleNavEntry()
         {

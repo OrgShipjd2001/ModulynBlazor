@@ -9,6 +9,7 @@
     /// </summary>
     public enum ModulynAuthRole
     {
+        Anonymous = 0,
         Admin = 1,
         PowerUser = 2,
         User = 3,
