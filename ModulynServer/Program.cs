@@ -54,6 +54,14 @@ namespace Modulyn.Server
                     .RequireAuthenticatedUser()
                     .AddRequirements(new ModulynAuthRequirement())
                     .Build();
+
+                foreach(ModulynAuthRole role in Enum.GetValues(typeof(ModulynAuthRole)))
+                {
+                    options.AddPolicy(role.ToString(), policy =>
+                    {
+                        policy.AddRequirements(new ModulynAuthRequirement(role));
+                    });
+                }
             });
 
             // Add module services
