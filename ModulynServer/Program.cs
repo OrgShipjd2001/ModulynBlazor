@@ -175,6 +175,7 @@ namespace Modulyn.Server
             {
                 if (File.Exists(Path.Combine(asmPath, "runmigrations.txt")))
                 {
+                    Logging.LogInfo("Running database migrations", "Modulyn");
                     using (var scope = app.Services.CreateScope())
                     {
                         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
