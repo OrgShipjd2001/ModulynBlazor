@@ -173,6 +173,16 @@ namespace Modulyn.Server
 
             if (WebServerSettings.Instance.Authentication)
             {
+                if (File.Exists(Path.Combine(asmPath, "runmigrations.txt")))
+                {
+                    using (var scope = app.Services.CreateScope())
+                    {
+                        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                        db.Database.Migrate();
+                    }
+                    File.Delete(Path.Combine(asmPath, "runmigrations.txt"));
+                }
+
                 // Add additional endpoints required by the Identity /Account Razor components.
                 app.MapAdditionalIdentityEndpoints();
             }
