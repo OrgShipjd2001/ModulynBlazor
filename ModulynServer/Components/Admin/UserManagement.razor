@@ -21,7 +21,7 @@
 }
 else
 {
-    <RadzenDataGrid Data="@users" TItem="ApplicationUser" AllowSorting="true" AllowFiltering="true"
+    <RadzenDataGrid @ref=userDataGrid Data="@users" TItem="ApplicationUser" AllowSorting="true" AllowFiltering="true"
                     PageSize="10" AllowPaging="true"
                     EmptyText="No users found."
                     Density="Density.Compact">
@@ -60,6 +60,7 @@ else
 @code {
     private List<ApplicationUser> users;
     private Dictionary<string, string> userRoles = new Dictionary<string, string>();
+    private RadzenDataGrid<ApplicationUser> userDataGrid;
 
     protected override async Task OnInitializedAsync()
     {
@@ -123,10 +124,17 @@ else
             try
             {
                 await _userManager.DeleteAsync(userToDelete);
+                users.Remove(userToDelete);
             }
             catch (Exception ex)
             {
                 NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Error", Detail = $"Could not delete user: {ex.Message}" });
+            }
+            StateHasChanged();
+
+            if (userDataGrid != null)
+            {
+                await userDataGrid.Reload(); // Reload grid to reflect changes
             }
         }
     }

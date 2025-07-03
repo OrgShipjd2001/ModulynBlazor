@@ -300,7 +300,10 @@ namespace Modulyn.Server
                 string adminEmail = "admin@example.com";
                 string adminPassword = "Admin$123"; // Use a strong password in production
                 var adminUser = await userManager.FindByEmailAsync(adminEmail);
-                if (adminUser == null)
+
+                // Only create the admin user if there are no admins
+                IList<ApplicationUser> adminList = await userManager.GetUsersInRoleAsync("Admin");
+                if ((adminList.Count == 0) && (adminUser == null))
                 {
                     adminUser = new ApplicationUser { UserName = adminEmail, Email = adminEmail, EmailConfirmed = true };
                     var result = await userManager.CreateAsync(adminUser, adminPassword);
