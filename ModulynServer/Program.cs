@@ -34,6 +34,13 @@ namespace Modulyn.Server
             // Add services to the container.
             builder.Services.AddRazorComponents().AddInteractiveServerComponents();
             builder.Services.AddRadzenComponents();
+            builder.Services.AddServerSideBlazor(options =>
+            {
+                if (builder.Environment.IsDevelopment())
+                {
+                    options.DetailedErrors = true;
+                }
+            });
             builder.Services.AddControllers();
             builder.Services.AddSingleton(WebServerSettings.Instance);
             builder.Services.AddSingleton(moduleManager);
