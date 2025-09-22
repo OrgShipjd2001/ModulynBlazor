@@ -23,7 +23,7 @@ echo ^<metadata^> >> %nuspecFile%
 echo ^<id^>Modulyn.Interface^</id^> >> %nuspecFile%
 echo ^<version^>%packVer%^</version^> >> %nuspecFile%
 echo ^<description^>A library containing the interfaces needed generate modules for the Modulyn Server^</description^> >> %nuspecFile%
-echo ^<authors^>Jared Shipley^</authors^> >> %nuspecFile%
+echo ^<authors^>Infinite Build^</authors^> >> %nuspecFile%
 echo ^<repository type="git" url="https://github.com/OrgShipjd2001/ModulynBlazor.git" /^> >> %nuspecFile%
 echo ^<readme^>docs\Readme.md^</readme^> >> %nuspecFile%
 echo ^<license type="file"^>License.txt^</license^>  >> %nuspecFile%
