@@ -25,7 +25,7 @@ echo ^<version^>%packVer%^</version^> >> %nuspecFile%
 echo ^<description^>A library containing the interfaces needed generate modules for the Modulyn Server^</description^> >> %nuspecFile%
 echo ^<authors^>Infinite Build^</authors^> >> %nuspecFile%
 echo ^<repository type="git" url="https://github.com/InfiniteBuild/ModulynBlazor.git" /^> >> %nuspecFile%
-echo ^<readme^>docs\Readme.md^</readme^> >> %nuspecFile%
+echo ^<readme^>docs\ReadMe.md^</readme^> >> %nuspecFile%
 echo ^<license type="file"^>License.txt^</license^>  >> %nuspecFile%
 echo ^<icon^>images/ModulynBlazor.jpg^</icon^> >> %nuspecFile%
 echo ^<dependencies^> >> %nuspecFile%

@@ -25,7 +25,7 @@ echo ^<version^>%packVer%^</version^> >> %nuspecFile%
 echo ^<description^>The Modulyn Server framework.  A component, addon based Blazor webserver.^</description^> >> %nuspecFile%
 echo ^<authors^>Infinite Build^</authors^> >> %nuspecFile%
 echo ^<repository type="git" url="https://github.com/InfiniteBuild/ModulynBlazor.git" /^> >> %nuspecFile%
-echo ^<readme^>docs\Readme.md^</readme^> >> %nuspecFile%
+echo ^<readme^>docs\ReadMe.md^</readme^> >> %nuspecFile%
 echo ^<license type="file"^>License.txt^</license^>  >> %nuspecFile%
 echo ^<icon^>images/ModulynBlazor.jpg^</icon^> >> %nuspecFile%
 echo ^<dependencies^> >> %nuspecFile%
