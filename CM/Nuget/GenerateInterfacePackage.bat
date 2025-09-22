@@ -24,7 +24,7 @@ echo ^<id^>Modulyn.Interface^</id^> >> %nuspecFile%
 echo ^<version^>%packVer%^</version^> >> %nuspecFile%
 echo ^<description^>A library containing the interfaces needed generate modules for the Modulyn Server^</description^> >> %nuspecFile%
 echo ^<authors^>Infinite Build^</authors^> >> %nuspecFile%
-echo ^<repository type="git" url="https://github.com/OrgShipjd2001/ModulynBlazor.git" /^> >> %nuspecFile%
+echo ^<repository type="git" url="https://github.com/InfiniteBuild/ModulynBlazor.git" /^> >> %nuspecFile%
 echo ^<readme^>docs\Readme.md^</readme^> >> %nuspecFile%
 echo ^<license type="file"^>License.txt^</license^>  >> %nuspecFile%
 echo ^<icon^>images/ModulynBlazor.jpg^</icon^> >> %nuspecFile%
@@ -38,9 +38,9 @@ echo ^</metadata^> >> %nuspecFile%
 echo ^<files^> >> %nuspecFile%
 
 echo ^<file src="%sourceDir%\ModulynInterface\**" target="lib\net8.0"/^> >> %nuspecFile%
-echo ^<file src="%nugetdir%\data\Readme.md" target="docs\" /^> >> %nuspecFile%
-echo ^<file src="%nugetdir%\data\LICENSE.txt" target="" /^> >> %nuspecFile%
-echo ^<file src="%nugetdir%\data\ModulynBlazor.jpg" target="images\" /^> >> %nuspecFile%
+echo ^<file src="%nugetdir%\Data\ReadMe.md" target="docs\" /^> >> %nuspecFile%
+echo ^<file src="%nugetdir%\Data\LICENSE.txt" target="" /^> >> %nuspecFile%
+echo ^<file src="%nugetdir%\Data\ModulynBlazor.jpg" target="images\" /^> >> %nuspecFile%
 
 echo ^</files^> >> %nuspecFile%
 echo ^</package^> >> %nuspecFile%
