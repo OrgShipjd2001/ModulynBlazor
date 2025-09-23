@@ -125,9 +125,15 @@ namespace Modulyn.Server.Bl
                         if (asmType.GetInterface(typeof(IWebServerModule).FullName) != null)
                         {
                             Logging.LogInfo("Found Module: " + dll, "Modulyn");
-                            IWebServerModule module = (IWebServerModule)modAsm.CreateInstance(asmType.FullName);
-                            AddModule(module);
-                        }
+                            try
+                            {
+                                IWebServerModule module = (IWebServerModule)modAsm.CreateInstance(asmType.FullName);
+                                AddModule(module);
+                            }
+                            catch (Exception ex)
+                            {
+                                Logging.LogError("Failed to create module instance: " + dll + Environment.NewLine + ex.ToString(), "Modulyn");
+                            }
                     }
                 }
                 catch (Exception exc)
