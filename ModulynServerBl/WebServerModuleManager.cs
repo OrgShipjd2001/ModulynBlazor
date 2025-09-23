@@ -134,6 +134,7 @@ namespace Modulyn.Server.Bl
                             {
                                 Logging.LogError("Failed to create module instance: " + dll + Environment.NewLine + ex.ToString(), "Modulyn");
                             }
+                        }
                     }
                 }
                 catch (Exception exc)
