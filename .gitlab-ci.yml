@@ -26,6 +26,7 @@ variables:
 
 stages:          # List of stages for jobs, and their order of execution
   - versioning
+  - configure
   - build
   - package
   - deploy
@@ -42,6 +43,30 @@ generate_version:
     paths:
       - version.txt
       - CM/Version/assemblyversion.props
+
+configure_group_repo:
+  stage: configure
+  rules:
+    - if: '$GroupRepo && $GroupRepoUser && $GroupRepoPW'
+  script:
+    - |
+      # 1. Capture the list of NuGet sources (forcing English output for reliable string matching)
+      $SourceList = (& $NugetExe sources list -Format Detailed -ForceEnglishOutput | Out-String)
+      
+      # 2. Define the source name to check
+      $SourceName = "PackageStore"
+      
+      # 3. Check if the source name exists in the output string
+      if ($SourceList -like "*$SourceName*") {
+          Write-Host "NuGet source '$SourceName' found. Updating source."
+          # If found, call Update
+          & $NugetExe sources Update -Name $SourceName -Source $GroupRepo -Username $GroupRepoUser -Password $GroupRepoPW
+      }
+      else {
+          Write-Host "NuGet source '$SourceName' not found. Adding new source."
+          # If not found, call Add
+          & $NugetExe sources Add -Name $SourceName -Source $GroupRepo -Username $GroupRepoUser -Password $GroupRepoPW
+      }
 
 build-job:       # This job runs in the build stage, which runs first.
   stage: build
@@ -88,26 +113,15 @@ nuget-release-packages:
     - '& $CI_PROJECT_DIR\cm\Nuget\GenerateWebSvrPackage.bat $CI_BUILD_VERSION $pubRelDir $pubNugetDir\websvr.nuspec'
     - '& $NugetExe pack $pubNugetDir\websvr.nuspec -OutputDirectory $pubNugetDir'
 
-deploy-dev-package:      # This job runs in the deploy stage.
+deploy-package:      # This job runs in the deploy stage.
   stage: deploy 
   variables:
     GIT_STRATEGY: none
   rules:
-    - if: $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH && '$DevPackageStore'
+    - if: '$UploadRepo && $UploadRepoToken'
   script:
-    - echo "Deploying to Dev Package Store..."
-    - '& $NugetExe push $pubNugetDir\*.nupkg -Source $DevPackageStore'
-    - echo "Application successfully deployed."
-
-deploy-release-package:      # This job runs in the deploy stage.
-  stage: deploy 
-  variables:
-    GIT_STRATEGY: none
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && '$ReleasePackageStore'
-  script:
-    - echo "Deploying to Dev Package Store..."
-    - '& $NugetExe push $pubNugetDir\*.nupkg -Source $ReleasePackageStore -ApiKey $RelPackageStoreToken'
+    - echo "Deploying to Package Store..."
+    - '& $NugetExe push $pubNugetDir\*.nupkg -Source $UploadRepo -ApiKey $UploadRepoToken'
     - echo "Application successfully deployed."
 
 deploy-droplocation:
