@@ -62,7 +62,6 @@ build-job:       # This job runs in the build stage, which runs first.
   artifacts:
     paths:
       - $pubRelDir/
-      - $pubDebDir/
       - $pubNugetDir/
     expire_in: 1 day
   
