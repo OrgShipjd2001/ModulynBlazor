@@ -4,7 +4,7 @@
 
 # Get required environment variables
 $NugetApiKey = $env:NugetUploadToken
-$NugetPackagesDir = $env:pubNugetDir
+$NugetPackagesDir = $env:nugetDir
 $NugetExePath = $env:NugetExe
 $NugetSource = "https://api.nuget.org/v3/index.json"
 

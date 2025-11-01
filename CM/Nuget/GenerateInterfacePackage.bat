@@ -5,7 +5,7 @@ setlocal
 set packVer=%1
 set sourceDir=%2
 set nuspecFile=%3
-set nugetDir=%sourceDir%\..\Nuget
+if "%nugetdir%"=="" set nugetDir=%sourceDir%\..\..\Nuget
 
 echo packVer: %packVer%
 echo sourceDir: %sourceDir%

@@ -9,34 +9,43 @@ if exist %PublishDir% rmdir /s /q %PublishDir%
 
 pushd %rootDir%
 
+echo Publish Debug
 dotnet publish ModulynServer\ModulynServer.csproj -o %pubDebDir%\ModulynServer --no-self-contained -c Debug -r win-x64
+if errorlevel 1 goto BuildError
+
 dotnet publish ModulynInterface\ModulynInterface.csproj -o %pubDebDir%\ModulynInterface --no-self-contained -c Debug
+if errorlevel 1 goto BuildError
+
 dotnet publish Test\TestModule\TestModule.csproj -o %pubDebDir%\Modules\TestModule --no-self-contained -c Debug -r win-x64
+if errorlevel 1 goto BuildError
+
 echo run migrations > %pubDebDir%\ModulynServer\runmigrations.txt
 
+echo Publish Release
 dotnet publish ModulynServer\ModulynServer.csproj -o %pubRelDir%\ModulynServer --no-self-contained -c Release -r win-x64
+if errorlevel 1 goto BuildError
+
 dotnet publish ModulynInterface\ModulynInterface.csproj -o %pubRelDir%\ModulynInterface --no-self-contained -c Release
+if errorlevel 1 goto BuildError
+
 dotnet publish Test\TestModule\TestModule.csproj -o %pubRelDir%\Modules\TestModule --no-self-contained -c Release -r win-x64
+if errorlevel 1 goto BuildError
+
 echo run migrations > %pubRelDir%\ModulynServer\runmigrations.txt
 
-mkdir %nugetDir% >NUL
-mkdir %nugetDir%\Data >NUL
-copy /y %rootDir%\License %nugetDir%\Data\License.txt
-copy /y %rootDir%\ReadMe.md %nugetDir%\Data\ReadMe.md
-copy /y %rootDir%\Resources\ModulynBlazor.jpg %nugetDir%\Data\ModulynBlazor.jpg
+goto BuildComplete
 
-echo.
-echo Retrieve Nuget package dependency info
+:BuildError
+echo ERROR during build
+set scripterror=true
+goto Done
 
-REM for readability, set the list in a variable (list is comma delimited)
-mkdir %nugetDir%\Data\websvr >NUL
-set csprojList=ModulynServer\ModulynServer.csproj
-powershell %rootDir%\cm\scripts\generate_dependencies.ps1 -csprojFiles %csprojList% -outputDir %nugetDir%\Data\websvr
+:BuildComplete
+call %pubProjScriptDir%\GenerateNugetInfo.bat
 
-mkdir %nugetDir%\Data\interface >NUL
-set csprojList=ModulynInterface\ModulynInterface.csproj
-powershell %rootDir%\cm\scripts\generate_dependencies.ps1 -csprojFiles %csprojList% -outputDir %nugetDir%\Data\interface
+:Done
 
 popd
 
-:Done
+if "%scripterror%"=="true" exit /b 1
+exit /b 0

@@ -12,13 +12,6 @@
   </PropertyGroup>
 	
   <ItemGroup>
-    <Compile Remove="Data\**" />
-    <Content Remove="Data\**" />
-    <EmbeddedResource Remove="Data\**" />
-    <None Remove="Data\**" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Azure.Identity" Version="1.14.0" />
     <PackageReference Include="Lumberjack" Version="0.0.9" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="8.0.16" />

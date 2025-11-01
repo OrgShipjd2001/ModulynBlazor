@@ -18,14 +18,9 @@
 
 variables:
   NugetExe: $CI_PROJECT_DIR\buildtools\nuget\nuget.exe
-  publishDir: $CI_PROJECT_DIR\Publish
-  pubRelDir: $CI_PROJECT_DIR\Publish\Release
-  pubDebDir: $CI_PROJECT_DIR\Publish\Debug
-  pubNugetDir: $CI_PROJECT_DIR\Publish\Nuget
-  # CI_BUILD_VERSION: 1.0.0
 
 stages:          # List of stages for jobs, and their order of execution
-  - versioning
+  - initialize
   - build
   - package
   - deploy
@@ -35,7 +30,7 @@ before_script:
   - '& $CI_PROJECT_DIR\CM\scripts\setup.ps1'
 
 generate_version:
-  stage: versioning
+  stage: initialize
   script:
     - '& $CI_PROJECT_DIR\CM\scripts\generate_version.ps1'
     - '& $CI_PROJECT_DIR\CM\scripts\update_assembly_version.ps1'
@@ -48,21 +43,37 @@ generate_version:
     reports:
       dotenv: variables.env
 
+global_variables:
+  stage: initialize
+  needs:
+    - job: generate_version
+  script:
+    - '& $CI_PROJECT_DIR\cm\setvariables.bat force globalvars.env'
+  artifacts:
+    reports:
+      dotenv: globalvars.env
+
 build-job:       # This job runs in the build stage, which runs first.
   stage: build
   needs:
     - job: generate_version
       artifacts: true 
+    - job: global_variables
+      artifacts: true
   script:
     - echo "Configure Nuget Source..."
     - '& $CI_PROJECT_DIR\CM\scripts\configure_nuget.ps1'
-    - echo "Compiling the code..."
+    - echo "Building the code..."
+    - '& $CI_PROJECT_DIR\CM\BuildProjects.bat'
+    - echo "Build complete."
+    - echo "Publishing the code..."
     - '& $CI_PROJECT_DIR\CM\PublishProjects.bat'
-    - echo "Compile complete."
+    - echo "Publish complete."
   artifacts:
     paths:
-      - $pubRelDir/
-      - $pubNugetDir/
+      - $buildDir/Release/ModulynInterface
+      - $publishDir/Release/ModulynServer
+      - $nugetDir/
     expire_in: 1 day
   
 nuget-dev-packages:
@@ -71,6 +82,8 @@ nuget-dev-packages:
     - job: generate_version
       artifacts: true
     - job: build-job
+      artifacts: true
+    - job: global_variables
       artifacts: true
   rules:
     - if: $CI_COMMIT_TAG
@@ -81,16 +94,16 @@ nuget-dev-packages:
     - echo "Static Version $STATIC_VERSION"
     - echo "CI_BUILD_VERSION $CI_BUILD_VERSION"
     - echo "CI_BUILD_NUMBER $CI_BUILD_NUMBER"
-    - echo "pubNugetDir $pubNugetDir"
-    - echo "pubRelDir $pubRelDir"
-    - New-Item -ItemType Directory -Force -Path $pubNugetDir
-    - '& $CI_PROJECT_DIR\cm\Nuget\GenerateInterfacePackage.bat $STATIC_VERSION-$CI_COMMIT_BRANCH.$CI_BUILD_NUMBER $pubRelDir $pubNugetDir\interface.nuspec'
-    - '& $NugetExe pack $pubNugetDir\interface.nuspec -OutputDirectory $pubNugetDir'
-    - '& $CI_PROJECT_DIR\cm\Nuget\GenerateWebSvrPackage.bat $STATIC_VERSION-$CI_COMMIT_BRANCH.$CI_BUILD_NUMBER $pubRelDir $pubNugetDir\websvr.nuspec'
-    - '& $NugetExe pack $pubNugetDir\websvr.nuspec -OutputDirectory $pubNugetDir'
+    - echo "BuildReleaseDir $buildReleaseDir"
+    - echo "NugetDir $nugetDir"
+    - New-Item -ItemType Directory -Force -Path $nugetDir
+    - '& $CI_PROJECT_DIR\cm\Nuget\GenerateInterfacePackage.bat $STATIC_VERSION-$CI_COMMIT_BRANCH.$CI_BUILD_NUMBER $buildReleaseDir $nugetDir\interface.nuspec'
+    - '& $NugetExe pack $nugetDir\interface.nuspec -OutputDirectory $nugetDir'
+    - '& $CI_PROJECT_DIR\cm\Nuget\GenerateWebSvrPackage.bat $STATIC_VERSION-$CI_COMMIT_BRANCH.$CI_BUILD_NUMBER $pubRelDir $nugetDir\websvr.nuspec'
+    - '& $NugetExe pack $nugetDir\websvr.nuspec -OutputDirectory $nugetDir'
   artifacts:
     paths:
-      - $pubNugetDir/
+      - $nugetDir/
     expire_in: 1 day
 
 nuget-release-packages:
@@ -100,21 +113,23 @@ nuget-release-packages:
       artifacts: true
     - job: build-job
       artifacts: true
+    - job: global_variables
+      artifacts: true
   rules:
     - if: $CI_COMMIT_TAG
   script:
     - echo "Creating Dev Packages"
     - echo "Static Version $STATIC_VERSION"
-    - echo "pubNugetDir $pubNugetDir"
-    - echo "pubRelDir $pubRelDir"
-    - New-Item -ItemType Directory -Force -Path $pubNugetDir
-    - '& $CI_PROJECT_DIR\cm\Nuget\GenerateInterfacePackage.bat $STATIC_VERSION $pubRelDir $pubNugetDir\interface.nuspec'
-    - '& $NugetExe pack $pubNugetDir\interface.nuspec -OutputDirectory $pubNugetDir'
-    - '& $CI_PROJECT_DIR\cm\Nuget\GenerateWebSvrPackage.bat $STATIC_VERSION $pubRelDir $pubNugetDir\websvr.nuspec'
-    - '& $NugetExe pack $pubNugetDir\websvr.nuspec -OutputDirectory $pubNugetDir'
+    - echo "BuildReleaseDir $buildReleaseDir"
+    - echo "NugetDir $nugetDir"
+    - New-Item -ItemType Directory -Force -Path $nugetDir
+    - '& $CI_PROJECT_DIR\cm\Nuget\GenerateInterfacePackage.bat $STATIC_VERSION $buildReleaseDir $nugetDir\interface.nuspec'
+    - '& $NugetExe pack $nugetDir\interface.nuspec -OutputDirectory $nugetDir'
+    - '& $CI_PROJECT_DIR\cm\Nuget\GenerateWebSvrPackage.bat $STATIC_VERSION $pubRelDir $nugetDir\websvr.nuspec'
+    - '& $NugetExe pack $nugetDir\websvr.nuspec -OutputDirectory $nugetDir'
   artifacts:
     paths:
-      - $pubNugetDir/
+      - $nugetDir/
     expire_in: 1 day
 
 deploy-dev-package:      # This job runs in the deploy stage.
@@ -124,13 +139,15 @@ deploy-dev-package:      # This job runs in the deploy stage.
       artifacts: true 
     - job: nuget-dev-packages
       artifacts: true
+    - job: global_variables
+      artifacts: true
   rules:
     - if: $CI_COMMIT_TAG
       when: never
     - if: '$UploadRepo && $UploadRepoToken'
   script:
     - echo "Deploying to Package Store..."
-    - '& $NugetExe push $pubNugetDir\*.nupkg -Source $UploadRepo -ApiKey $UploadRepoToken'
+    - '& $NugetExe push $nugetDir\*.nupkg -Source $UploadRepo -ApiKey $UploadRepoToken'
     - echo "Application successfully deployed."
 
 deploy-release-package:      
@@ -140,11 +157,13 @@ deploy-release-package:
       artifacts: true 
     - job: nuget-release-packages
       artifacts: true
+    - job: global_variables
+      artifacts: true
   rules:
     - if: '$UploadRepo && $UploadRepoToken && $CI_COMMIT_TAG'
   script:
     - echo "Deploying to Package Store..."
-    - '& $NugetExe push $pubNugetDir\*.nupkg -Source $UploadRepo -ApiKey $UploadRepoToken'
+    - '& $NugetExe push $nugetDir\*.nupkg -Source $UploadRepo -ApiKey $UploadRepoToken'
     - echo "Application successfully deployed."
     
 deploy-droplocation:
@@ -154,13 +173,17 @@ deploy-droplocation:
       artifacts: true 
     - job: build-job
       artifacts: true
+    - job: global_variables
+      artifacts: true
   rules:
     - if: '$DropLocationRoot'
   script:
-    - 'echo "CI_BUILD_VERSION $CI_BUILD_VERSION"'
-    - '$FinalDropLocation = "{0}\{1}\{2}\{3}_{4}" -f $DropLocationRoot, $CI_PROJECT_NAME, $CI_COMMIT_BRANCH, $CI_PIPELINE_ID, $CI_BUILD_VERSION'
-    - 'echo "Publish Directory $publishDir"'
-    - 'echo "Deploying to $FinalDropLocation"'
+    - echo "Run Publish Script"
+    - '& $CI_PROJECT_DIR\CM\PublishProjects.bat'
+    - echo "CI_BUILD_VERSION $CI_BUILD_VERSION"
+    - $FinalDropLocation = "{0}\{1}\{2}\{3}_{4}" -f $DropLocationRoot, $CI_PROJECT_NAME, $CI_COMMIT_BRANCH, $CI_BUILD_VERSION, $CI_PIPELINE_ID
+    - echo "Publish Directory $publishDir"
+    - echo "Deploying to $FinalDropLocation"
     - 'robocopy /e /s "$publishDir" "$FinalDropLocation"; if ($lastexitcode -le 2) { $global:LASTEXITCODE = $null }'
 
 release_job:
@@ -171,6 +194,8 @@ release_job:
     - job: build-job
       artifacts: true
     - job: nuget-release-packages
+      artifacts: true
+    - job: global_variables
       artifacts: true
   rules:
     - if: $CI_COMMIT_TAG 
