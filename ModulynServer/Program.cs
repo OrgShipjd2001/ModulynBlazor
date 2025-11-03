@@ -1,4 +1,5 @@
 using Lumberjack.Interface;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -251,6 +252,16 @@ namespace Modulyn.Server
             WebServerSettings settings = WebServerSettings.Instance;
             foreach (WebServerAuthSettings auth in settings.AuthSettings)
             {
+                if ((auth.Provider.Equals("httpauthheader", StringComparison.OrdinalIgnoreCase)) && auth.Enabled)
+                {
+                    builder.Services.AddAuthentication("HttpAuthHeader")
+                        .AddScheme<HttpAuthHeaderOptions, HttpAuthHeaderHandler>("HttpAuthHeader", options =>
+                        {
+                            options.UserHeader = auth.Properties.ContainsKey("UserHeader") ? auth.Properties["UserHeader"] : "X-User";
+                            options.EmailHeader = auth.Properties.ContainsKey("EmailHeader") ? auth.Properties["EmailHeader"] : "X-Email";
+                        });
+                }
+                    
                 if ((auth.Provider.Equals("entraid", StringComparison.OrdinalIgnoreCase)) && auth.Enabled)
                 {
                     string instance = auth.Properties["Instance"];

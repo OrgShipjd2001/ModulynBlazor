@@ -9,6 +9,12 @@
 		<Enabled>false</Enabled>
 		<AuthDbConnectionString></AuthDbConnectionString>
 		<AuthSettings>
+			<Provider>HTTPAuthHeader</Provider>
+			<Enabled>false</Enabled>
+			<Property name="Username">X-User</Property>
+			<Property name="Email">X-Email</Property>
+		</AuthSettings>
+		<AuthSettings>
 			<Provider>Local</Provider>
 			<Enabled>false</Enabled>
 		</AuthSettings>
