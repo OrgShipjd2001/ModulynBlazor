@@ -270,3 +270,5 @@ docker/volumes/*
 # vscode files
 .vscode/
 /_targets/Nuget/MSBuildAnalyser.nuspec
+/CM/globalvars.env
+/binaries/Nuget

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
+using Modulyn.Server.Bl;
 using Radzen;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
@@ -13,16 +14,16 @@ namespace ModulynServer.Handlers
     /// </summary>
     public class HttpAuthHeaderHandler : AuthenticationHandler<HttpAuthHeaderOptions>
     {
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
 
         public HttpAuthHeaderHandler(
             IOptionsMonitor<HttpAuthHeaderOptions> options,
             ILoggerFactory logger,
             UrlEncoder encoder,
             ISystemClock clock,
-            UserManager<IdentityUser> userManager,
-            SignInManager<IdentityUser> signInManager)
+            UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager)
             : base(options, logger, encoder, clock) 
         {
             _userManager = userManager;
@@ -53,7 +54,7 @@ namespace ModulynServer.Handlers
             var user = await _userManager.FindByNameAsync(username);
             if (user == null)
             {
-                user = new IdentityUser
+                user = new ApplicationUser
                 {
                     UserName = username,
                     Email = email ?? $"{username}@unknown.local"

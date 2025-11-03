@@ -15,7 +15,7 @@
         <div class="top-row px-4">
             @if (SvrSettings.Authentication)
             {
-                <AuthorizeView>
+                <AuthorizeView Context="auth">
                     <Authorized>
                         <div class="nav-item px-3">
                             @* <RadzenButton ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary" Text="Logout" Size="ButtonSize.Small" Click="@LogoutClick" /> *@
@@ -23,6 +23,7 @@
                                 <AntiforgeryToken />
                                 <input type="hidden" name="ReturnUrl" value="" />
                                 <button type="submit" class="nav-link">
+                                    <span style="font-size:9px">@auth.User.Identity?.Name</span><br />
                                     <span class="bi bi-arrow-bar-left-nav-menu" aria-hidden="true"></span> Logout
                                 </button>
                             </form>

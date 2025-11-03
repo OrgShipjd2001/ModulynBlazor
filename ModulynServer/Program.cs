@@ -218,10 +218,22 @@ namespace Modulyn.Server
 
             builder.Services.AddAuthentication(options =>
             {
-                options.DefaultScheme = IdentityConstants.ApplicationScheme;
+                options.DefaultScheme = "SmartScheme";
                 options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
             })
-                .AddIdentityCookies();
+            .AddPolicyScheme("SmartScheme", "Select scheme at runtime", options =>
+            {
+                options.ForwardDefaultSelector = context =>
+                {
+                    // Only use header scheme when X-User header exists
+                    if (context.Request.Headers.ContainsKey("X-User"))
+                        return "HttpAuthHeader";
+
+                    // Otherwise use the Identity application cookie
+                    return IdentityConstants.ApplicationScheme;
+                };
+            })
+            .AddIdentityCookies();
 
             var connectionString = settings.AuthDbConnectionString;
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -254,7 +266,7 @@ namespace Modulyn.Server
             {
                 if ((auth.Provider.Equals("httpauthheader", StringComparison.OrdinalIgnoreCase)) && auth.Enabled)
                 {
-                    builder.Services.AddAuthentication("HttpAuthHeader")
+                    builder.Services.AddAuthentication()
                         .AddScheme<HttpAuthHeaderOptions, HttpAuthHeaderHandler>("HttpAuthHeader", options =>
                         {
                             options.UserHeader = auth.Properties.ContainsKey("UserHeader") ? auth.Properties["UserHeader"] : "X-User";
