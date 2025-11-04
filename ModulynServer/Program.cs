@@ -225,9 +225,21 @@ namespace Modulyn.Server
             {
                 options.ForwardDefaultSelector = context =>
                 {
-                    // Only use header scheme when X-User header exists
-                    if (context.Request.Headers.ContainsKey("X-User"))
-                        return "HttpAuthHeader";
+                    if (settings.IsAuthEnabled("HttpAuthHeader"))
+                    {
+                        var provider = settings.GetAuthProvider("HttpAuthHeader");
+                        // default to "X-User" when provider or setting is not present or empty
+                        string userHeader = "X-User";
+                        if (provider?.Properties != null &&
+                            provider.Properties.TryGetValue("UserHeader", out var headerValue) &&
+                            !string.IsNullOrWhiteSpace(headerValue))
+                        {
+                            userHeader = headerValue;
+                        }
+                        // Only use header scheme when X-User header exists
+                        if (context.Request.Headers.ContainsKey(userHeader))
+                            return "HttpAuthHeader";
+                    }
 
                     // Otherwise use the Identity application cookie
                     return IdentityConstants.ApplicationScheme;
