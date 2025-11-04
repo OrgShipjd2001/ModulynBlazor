@@ -17,22 +17,22 @@
             {
                 <AuthorizeView Context="auth">
                     <Authorized>
-                        <div class="nav-item px-3">
-                            @* <RadzenButton ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary" Text="Logout" Size="ButtonSize.Small" Click="@LogoutClick" /> *@
-                            <form action="Account/Logout" method="post">
-                                <AntiforgeryToken />
-                                <input type="hidden" name="ReturnUrl" value="" />
-                                <button type="submit" class="nav-link">
-                                    <span style="font-size:9px">@auth.User.Identity?.Name</span><br />
-                                    <span class="bi bi-arrow-bar-left-nav-menu" aria-hidden="true"></span> Logout
-                                </button>
-                            </form>
+                        <div class="nav-item px-1">
+                            <span style="font-size:10px">@auth.User.Identity?.Name</span>
+                            @if (!auth.User.Identity.AuthenticationType.Equals("HttpAuthHeader", StringComparison.OrdinalIgnoreCase))
+                            {
+                                <form action="Account/Logout" method="post">
+                                    <AntiforgeryToken />
+                                    <input type="hidden" name="ReturnUrl" value="" />
+                                    <button type="submit" class="btn btn-outline-secondary btn-sm" style="font-size:10px">Logout</button>
+                                </form>
+                            }
                         </div>
                     </Authorized>
                     <NotAuthorized>
                         <div class="nav-item px-3">
                             <NavLink class="nav-link" href="Account/Login">
-                                <span class="bi bi-person-badge-nav-menu" aria-hidden="true"></span> Login
+                                <span class="btn btn-outline-primary btn-sm" aria-hidden="true">Login</span>
                             </NavLink>
                         </div>
                     </NotAuthorized>

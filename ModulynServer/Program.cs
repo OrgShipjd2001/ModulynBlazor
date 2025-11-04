@@ -299,7 +299,7 @@ namespace Modulyn.Server
                         options.ClientSecret = clientSecret;
                         options.ResponseType = "code";
                         options.SaveTokens = true;
-                        options.RequireHttpsMetadata = false;
+                        options.RequireHttpsMetadata = true;
                         // Add other scopes as needed
                     }).AddCookie();
                 }
