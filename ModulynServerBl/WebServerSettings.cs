@@ -98,5 +98,34 @@ namespace Modulyn.Server.Bl
                 }
             }
         }
+
+        public bool IsAuthEnabled(string provider)
+        {
+            if (!Authentication)
+                return false;
+
+            foreach(var authSettings in AuthSettings)
+            {
+                if (authSettings.Provider.Equals(provider, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return authSettings.Enabled;
+                }
+            }
+
+            return false;
+        }
+
+        public WebServerAuthSettings GetAuthProvider(string provider)
+        {
+            foreach (var authSettings in AuthSettings)
+            {
+                if (authSettings.Provider.Equals(provider, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return authSettings;
+                }
+            }
+
+            return null;
+        }
     }
 }

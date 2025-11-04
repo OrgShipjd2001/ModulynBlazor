@@ -1,4 +1,5 @@
 using Lumberjack.Interface;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -217,10 +218,34 @@ namespace Modulyn.Server
 
             builder.Services.AddAuthentication(options =>
             {
-                options.DefaultScheme = IdentityConstants.ApplicationScheme;
+                options.DefaultScheme = "SmartScheme";
                 options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
             })
-                .AddIdentityCookies();
+            .AddPolicyScheme("SmartScheme", "Select scheme at runtime", options =>
+            {
+                options.ForwardDefaultSelector = context =>
+                {
+                    if (settings.IsAuthEnabled("HttpAuthHeader"))
+                    {
+                        var provider = settings.GetAuthProvider("HttpAuthHeader");
+                        // default to "X-User" when provider or setting is not present or empty
+                        string userHeader = "X-User";
+                        if (provider?.Properties != null &&
+                            provider.Properties.TryGetValue("UserHeader", out var headerValue) &&
+                            !string.IsNullOrWhiteSpace(headerValue))
+                        {
+                            userHeader = headerValue;
+                        }
+                        // Only use header scheme when X-User header exists
+                        if (context.Request.Headers.ContainsKey(userHeader))
+                            return "HttpAuthHeader";
+                    }
+
+                    // Otherwise use the Identity application cookie
+                    return IdentityConstants.ApplicationScheme;
+                };
+            })
+            .AddIdentityCookies();
 
             var connectionString = settings.AuthDbConnectionString;
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -251,6 +276,16 @@ namespace Modulyn.Server
             WebServerSettings settings = WebServerSettings.Instance;
             foreach (WebServerAuthSettings auth in settings.AuthSettings)
             {
+                if ((auth.Provider.Equals("httpauthheader", StringComparison.OrdinalIgnoreCase)) && auth.Enabled)
+                {
+                    builder.Services.AddAuthentication()
+                        .AddScheme<HttpAuthHeaderOptions, HttpAuthHeaderHandler>("HttpAuthHeader", options =>
+                        {
+                            options.UserHeader = auth.Properties.ContainsKey("UserHeader") ? auth.Properties["UserHeader"] : "X-User";
+                            options.EmailHeader = auth.Properties.ContainsKey("EmailHeader") ? auth.Properties["EmailHeader"] : "X-Email";
+                        });
+                }
+                    
                 if ((auth.Provider.Equals("entraid", StringComparison.OrdinalIgnoreCase)) && auth.Enabled)
                 {
                     string instance = auth.Properties["Instance"];
@@ -264,7 +299,7 @@ namespace Modulyn.Server
                         options.ClientSecret = clientSecret;
                         options.ResponseType = "code";
                         options.SaveTokens = true;
-                        options.RequireHttpsMetadata = false;
+                        options.RequireHttpsMetadata = true;
                         // Add other scopes as needed
                     }).AddCookie();
                 }
