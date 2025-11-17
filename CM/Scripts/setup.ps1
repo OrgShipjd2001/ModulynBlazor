@@ -25,14 +25,14 @@ if (Test-Path "buildnumber.txt")
 }
 
 # Convert current branch name to a safe format
-$env:BRANCH_NAME = $env:CI_COMMIT_REF_NAME -replace '[^a-zA-Z0-9]', '-'
+$env:BRANCH_NAME = $env:CI_COMMIT_REF_NAME -replace '[^a-zA-Z0-9]', ''
 $env:BUILD_COUNTER_VAR = "BUILD_COUNTER_$($env:BRANCH_NAME)"
 $env:LAST_VERSION_VAR = "LAST_VERSION_$($env:BRANCH_NAME)"
 
 # --- NEW LOGIC FOR RELEASE BUILD COUNTER ---
 # We calculate the variable name for the default branch (usually 'main' or 'master').
 # This is needed by generate_version.ps1 when a tag is detected.
-$mainBranchName = $env:CI_DEFAULT_BRANCH -replace '[^a-zA-Z0-9]', '-'
+$mainBranchName = $env:CI_DEFAULT_BRANCH -replace '[^a-zA-Z0-9]', ''
 $env:MAIN_BUILD_COUNTER_VAR = "BUILD_COUNTER_$($mainBranchName)"
 # -------------------------------------------
 
