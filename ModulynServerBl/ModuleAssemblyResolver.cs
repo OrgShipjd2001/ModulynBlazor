@@ -78,41 +78,27 @@ namespace Modulyn.Server.Bl
             return string.Empty;
         }
 
-        private static string GetAssemblyFileName(ResolveEventArgs args)
-        {
-            string name = args.Name;
-
-            int commaIndex = args.Name.IndexOf(',');
-            if (commaIndex > 0)
-            {
-                name = name.Substring(0, commaIndex);
-            }
-
-            return name + ".dll";
-        }
-
-        private static Assembly CurrentDomainOnAssemblyResolve(object sender, ResolveEventArgs args)
+        public static Assembly? ResolveAssembly(string assemblyName)
         {
             Assembly resolvedAssembly = null;
-            string asmName = GetAssemblyFileName(args);
+            string dllName = GetAssemblyFileName(assemblyName);
 
             List<string> results = new List<string>();
 
-            string callingasmDir = Path.GetDirectoryName(args.RequestingAssembly.Location);
-            results.AddRange(Directory.GetFiles(callingasmDir, asmName, SearchOption.TopDirectoryOnly));
-
-            results.AddRange(Directory.GetFiles(m_baseDir, asmName, SearchOption.TopDirectoryOnly));
+            results.AddRange(Directory.GetFiles(m_baseDir, dllName, SearchOption.TopDirectoryOnly));
+            if (results.Count > 0)
+                return Assembly.LoadFrom(results[0]);
 
             foreach (string directory in m_additionalDirs)
             {
                 try
                 {
-                    results.AddRange(Directory.GetFiles(directory, asmName, SearchOption.AllDirectories));
+                    results.AddRange(Directory.GetFiles(directory, dllName, SearchOption.AllDirectories));
                 }
                 catch (Exception exc)
                 {
                     // Log error
-                    Logging.LogError("Execption in resolve assembly: " + asmName + Environment.NewLine + exc.ToString(), "Modulyn"); 
+                    Logging.LogError("Execption in resolve assembly: " + dllName + Environment.NewLine + exc.ToString(), "Modulyn");
                 }
 
                 if (results.Count > 0)
@@ -121,6 +107,29 @@ namespace Modulyn.Server.Bl
                     break;
                 }
             }
+
+            return resolvedAssembly;
+        }
+
+        private static string GetAssemblyFileName(string assemblyName)
+        {
+            string name = assemblyName;
+
+            int commaIndex = assemblyName.IndexOf(',');
+            if (commaIndex > 0)
+            {
+                name = name.Substring(0, commaIndex);
+            }
+
+            return name + ".dll";
+        }
+
+        private static Assembly? CurrentDomainOnAssemblyResolve(object sender, ResolveEventArgs args)
+        {
+            Assembly? resolvedAssembly = null;
+            string asmName = GetAssemblyFileName(args.Name);
+
+            resolvedAssembly = ResolveAssembly(asmName);
 
             return resolvedAssembly;
         }

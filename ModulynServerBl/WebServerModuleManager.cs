@@ -163,6 +163,10 @@ namespace Modulyn.Server.Bl
 
             public Assembly? Resolve(AssemblyLoadContext context, AssemblyName assemblyName)
             {
+                Assembly? resolved = ModuleAssemblyResolver.ResolveAssembly(assemblyName.FullName);
+                if (resolved != null)
+                    return resolved;
+
                 // Only resolve assemblies from the module's directory
                 string assemblyPath = Path.Combine(_moduleDirectory, $"{assemblyName.Name}.dll");
                 if (File.Exists(assemblyPath))
