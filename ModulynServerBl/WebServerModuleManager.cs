@@ -8,7 +8,7 @@ namespace Modulyn.Server.Bl
     public class WebServerModuleManager
     {
         private string m_moduleDir = "Modules";
-
+        
         // Track both module and its AssemblyLoadContext
         private class ModuleContextInfo
         {
@@ -156,6 +156,11 @@ namespace Modulyn.Server.Bl
         {
             private readonly string _moduleDirectory;
 
+            private static List<string> m_parentAsmOnly = new List<string>
+            {
+                "modulyninterface"
+            };
+
             public ModuleAssemblyResolverHandler(string moduleDirectory)
             {
                 _moduleDirectory = moduleDirectory;
@@ -163,22 +168,28 @@ namespace Modulyn.Server.Bl
 
             public Assembly? Resolve(AssemblyLoadContext context, AssemblyName assemblyName)
             {
-                Assembly? resolved = ModuleAssemblyResolver.ResolveAssembly(assemblyName.FullName);
-                if (resolved != null)
-                    return resolved;
-
-                // Only resolve assemblies from the module's directory
-                string assemblyPath = Path.Combine(_moduleDirectory, $"{assemblyName.Name}.dll");
-                if (File.Exists(assemblyPath))
+                if (m_parentAsmOnly.Contains(assemblyName.Name.ToLower()))
                 {
-                    return context.LoadFromAssemblyPath(assemblyPath);
+                    Assembly? resolved = ModuleAssemblyResolver.ResolveAssembly(assemblyName.FullName);
+                    if (resolved != null)
+                        return resolved;
+                }
+                else
+                {
+                    // Only resolve assemblies from the module's directory
+                    string assemblyPath = Path.Combine(_moduleDirectory, $"{assemblyName.Name}.dll");
+                    if (File.Exists(assemblyPath))
+                    {
+                        return context.LoadFromAssemblyPath(assemblyPath);
+                    }
+
+                    string[] filelist = Directory.GetFiles(_moduleDirectory, $"{assemblyName.Name}.dll", SearchOption.AllDirectories);
+                    if (filelist.Length > 0)
+                    {
+                        return context.LoadFromAssemblyPath(filelist[0]);
+                    }
                 }
 
-                string[] filelist = Directory.GetFiles(_moduleDirectory, $"{assemblyName.Name}.dll", SearchOption.AllDirectories);
-                if (filelist.Length > 0)
-                {
-                    return context.LoadFromAssemblyPath(filelist[0]);
-                }
                 return null;
             }
         }
