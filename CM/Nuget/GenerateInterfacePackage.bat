@@ -28,6 +28,7 @@ echo ^<repository type="git" url="https://github.com/InfiniteBuild/ModulynBlazor
 echo ^<readme^>docs\ReadMe.md^</readme^> >> %nuspecFile%
 echo ^<license type="file"^>License.txt^</license^>  >> %nuspecFile%
 echo ^<icon^>images/ModulynBlazor.jpg^</icon^> >> %nuspecFile%
+echo ^<developmentDependency^>true^</developmentDependency^> >> %nuspecFile%
 echo ^<dependencies^> >> %nuspecFile%
 for %%i in ("%nugetDir%\data\interface\dependencies*.xml") do (
     type %%i >> %nuspecFile%

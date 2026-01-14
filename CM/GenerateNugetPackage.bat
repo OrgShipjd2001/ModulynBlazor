@@ -12,7 +12,7 @@ mkdir %nugetDir% >NUL
 if EXIST %nugetDir%\*.nuspec erase /f /q %nugetDir%\*.nuspec
 erase /f /q %nugetDir%\*.nupkg
 
-call %rootdir%\cm\Nuget\GenerateInterfacePackage.bat %version%%prerelease% %buildReleaseDir% %nugetDir%\interface.nuspec
+call %rootdir%\cm\Nuget\GenerateInterfacePackage.bat %version%%prerelease% %pubRelDir% %nugetDir%\interface.nuspec
 call %rootdir%\cm\Nuget\GenerateWebSvrPackage.bat %version%%prerelease% %pubRelDir% %nugetDir%\WebSvr.nuspec
 
 %rootDir%\buildtools\nuget\nuget.exe pack %nugetDir%\interface.nuspec -OutputDirectory %nugetDir%
