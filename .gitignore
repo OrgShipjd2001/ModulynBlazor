@@ -272,3 +272,4 @@ docker/volumes/*
 /_targets/Nuget/MSBuildAnalyser.nuspec
 /CM/globalvars.env
 /binaries/Nuget
+/globalvars.env

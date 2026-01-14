@@ -1,9 +1,9 @@
 @echo off
 
-set variableFile=globalvars.env
+set variableFileName=globalvars.env
 
 REM create variableFile for pipeline
-if not %2.==. set variableFile=%2
+if not %2.==. set variableFileName=%2
 
 REM override - force setting the variables
 if not %1.==. if "%1"=="force" goto Force
@@ -13,9 +13,6 @@ REM only set the variables once
 if not "%setvarScriptDir%"=="" goto Done
 
 :Force
-if not "%variableFile%"=="" if exist %variableFile% erase /f /q %variableFile%
-set scripterror=false
-
 set setvarScriptDir=%~dp0
 echo setvarScriptDir: %setvarScriptDir%
 
@@ -23,6 +20,11 @@ pushd %setvarScriptDir%..
 set rootDir=%cd%
 popd
 echo rootDir: %rootDir%
+
+set variableFile=%rootdir%\%variableFileName%
+if exist %variableFile% erase /f /q %variableFile%
+set scripterror=false
+
 if not "%variableFile%"=="" echo rootDir=%rootDir% >> %variableFile%
 
 set binaryDir=%rootDir%\binaries

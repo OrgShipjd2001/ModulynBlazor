@@ -1,7 +1,7 @@
 ﻿using Lumberjack.Interface;
 using Modulyn.Server.Interface;
 using System.Reflection;
-
+using System.Runtime.Loader;
 
 namespace Modulyn.Server.Bl
 {
@@ -9,7 +9,14 @@ namespace Modulyn.Server.Bl
     {
         private string m_moduleDir = "Modules";
 
-        private Dictionary<string, IWebServerModule> m_moduleList = new Dictionary<string, IWebServerModule>();
+        // Track both module and its AssemblyLoadContext
+        private class ModuleContextInfo
+        {
+            public IWebServerModule Module { get; set; }
+            public AssemblyLoadContext LoadContext { get; set; }
+        }
+
+        private Dictionary<string, ModuleContextInfo> m_moduleList = new Dictionary<string, ModuleContextInfo>();
 
         public WebServerNavManager NavManager { get; set; } = new WebServerNavManager();
 
@@ -25,9 +32,9 @@ namespace Modulyn.Server.Bl
             }
         }
 
-        public void AddModule(IWebServerModule module)
+        public void AddModule(IWebServerModule module, AssemblyLoadContext loadContext)
         {
-            m_moduleList.Add(module.ModuleId, module);
+            m_moduleList.Add(module.ModuleId, new ModuleContextInfo { Module = module, LoadContext = loadContext });
 
             List<IWebModuleNavEntry> navEntries = module.GetModuleNavEntries();
 
@@ -43,12 +50,12 @@ namespace Modulyn.Server.Bl
 
         public void RemoveModule(string moduleName)
         {
-            IWebServerModule module = null;
-            if (m_moduleList.ContainsKey(moduleName))
-                module = m_moduleList[moduleName];
-
-            if (module == null)
+            if (!m_moduleList.ContainsKey(moduleName))
                 return;
+
+            var info = m_moduleList[moduleName];
+            var module = info.Module;
+            var loadContext = info.LoadContext;
 
             List<IWebModuleNavEntry> navEntries = module.GetModuleNavEntries();
 
@@ -56,16 +63,16 @@ namespace Modulyn.Server.Bl
             {
                 NavManager.RemoveNavEntry(entry.NavItemPath, entry.NavItemName);
             }
+
+            m_moduleList.Remove(moduleName);
+
+            // Unload the context
+            loadContext.Unload();
         }
 
         public List<IWebServerModule> GetModuleList()
         {
-            List<IWebServerModule> modList = new List<IWebServerModule>();
-
-            foreach(string key in m_moduleList.Keys)
-                modList.Add(m_moduleList[key]);
-
-            return modList;
+            return m_moduleList.Values.Select(x => x.Module).ToList();
         }
 
         private void DiscoverModules()
@@ -104,42 +111,45 @@ namespace Modulyn.Server.Bl
             }
 
             // Update the assembly resolver
-            foreach(string dirname in Directory.GetDirectories(modulePath))
+            foreach (string dirname in Directory.GetDirectories(modulePath))
             {
                 ModuleAssemblyResolver.AddDirectory(dirname);
-            }
 
-            string[] fileList = Directory.GetFiles(modulePath, "*.dll", SearchOption.AllDirectories);
+                string[] fileList = Directory.GetFiles(dirname, "*.dll");
 
-            foreach (string dll in fileList)
-            {
-                try
+                foreach (string dll in fileList)
                 {
-                    Assembly modAsm = Assembly.LoadFrom(dll);
-
-                    foreach (TypeInfo asmType in modAsm.GetTypes())
+                    try
                     {
-                        if (asmType.IsAbstract)
-                            continue;
+                        // Use a custom AssemblyLoadContext for each module
+                        var alc = new AssemblyLoadContext($"ModuleContext_{Path.GetFileNameWithoutExtension(dll)}", isCollectible: true);
+                        Assembly modAsm = alc.LoadFromAssemblyPath(dll);
 
-                        if (asmType.GetInterface(typeof(IWebServerModule).FullName) != null)
+                        foreach (TypeInfo asmType in modAsm.GetTypes())
                         {
-                            Logging.LogInfo("Found Module: " + dll, "Modulyn");
-                            try
+                            if (asmType.IsAbstract)
+                                continue;
+
+                            if (asmType.GetInterface(typeof(IWebServerModule).FullName) != null)
                             {
-                                IWebServerModule module = (IWebServerModule)modAsm.CreateInstance(asmType.FullName);
-                                AddModule(module);
-                            }
-                            catch (Exception ex)
-                            {
-                                Logging.LogError("Failed to create module instance: " + dll + Environment.NewLine + ex.ToString(), "Modulyn");
+                                Logging.LogInfo("Found Module: " + dll, "Modulyn");
+                                try
+                                {
+                                    var module = (IWebServerModule)Activator.CreateInstance(asmType.AsType());
+                                    AddModule(module, alc);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logging.LogError("Failed to create module instance: " + dll + Environment.NewLine + ex.ToString(), "Modulyn");
+                                    alc.Unload();
+                                }
                             }
                         }
                     }
-                }
-                catch (Exception exc)
-                {
-                    Logging.LogWarning("Discover Modules - Failed to load assembly: " + dll + " - " + exc.Message, "Modulyn");
+                    catch (Exception exc)
+                    {
+                        Logging.LogWarning("Discover Modules - Failed to load assembly: " + dll + " - " + exc.Message, "Modulyn");
+                    }
                 }
             }
         }
