@@ -78,27 +78,23 @@ namespace Modulyn.Server.Bl
         private void DiscoverModules()
         {
             string asmPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string modulePath = string.Empty;
+            string modulePath = Path.Combine(asmPath, m_moduleDir); // Default - subdirectory "Modules"
 
             Logging.LogInfo("Discover Modules", "Modulyn");
 
             // Full directory path set in the settings
             if (Directory.Exists(WebServerSettings.Instance.ModulesPath))
             {
-                modulePath = WebServerSettings.Instance.ModulesPath;
+                DirectoryInfo di = new DirectoryInfo(WebServerSettings.Instance.ModulesPath);
+                modulePath = di.FullName;
             }
             else
             {
                 // A custom subdirectory is set in the settings
                 if (Directory.Exists(Path.Combine(asmPath, WebServerSettings.Instance.ModulesPath)))
                 {
-                    modulePath = Path.Combine(asmPath, WebServerSettings.Instance.ModulesPath);
-                }
-                else
-                {
-                    // Default / nothing is set in the settings
-                    if (Directory.Exists(Path.Combine(asmPath, m_moduleDir)))
-                        modulePath = Path.Combine(asmPath, m_moduleDir);
+                    DirectoryInfo di = new DirectoryInfo(Path.Combine(asmPath, WebServerSettings.Instance.ModulesPath));
+                    modulePath = di.FullName;
                 }
             }
 
@@ -113,7 +109,7 @@ namespace Modulyn.Server.Bl
             // Update the assembly resolver
             foreach (string dirname in Directory.GetDirectories(modulePath))
             {
-                ModuleAssemblyResolver.AddDirectory(dirname);
+                //ModuleAssemblyResolver.AddDirectory(dirname);
 
                 string[] fileList = Directory.GetFiles(dirname, "*.dll");
 
@@ -123,6 +119,7 @@ namespace Modulyn.Server.Bl
                     {
                         // Use a custom AssemblyLoadContext for each module
                         var alc = new AssemblyLoadContext($"ModuleContext_{Path.GetFileNameWithoutExtension(dll)}", isCollectible: true);
+                        alc.Resolving += new ModuleAssemblyResolverHandler(dirname).Resolve;
                         Assembly modAsm = alc.LoadFromAssemblyPath(dll);
 
                         foreach (TypeInfo asmType in modAsm.GetTypes())
@@ -151,6 +148,34 @@ namespace Modulyn.Server.Bl
                         Logging.LogWarning("Discover Modules - Failed to load assembly: " + dll + " - " + exc.Message, "Modulyn");
                     }
                 }
+            }
+        }
+
+        // Add this event handler class to resolve module assemblies independently
+        private class ModuleAssemblyResolverHandler
+        {
+            private readonly string _moduleDirectory;
+
+            public ModuleAssemblyResolverHandler(string moduleDirectory)
+            {
+                _moduleDirectory = moduleDirectory;
+            }
+
+            public Assembly? Resolve(AssemblyLoadContext context, AssemblyName assemblyName)
+            {
+                // Only resolve assemblies from the module's directory
+                string assemblyPath = Path.Combine(_moduleDirectory, $"{assemblyName.Name}.dll");
+                if (File.Exists(assemblyPath))
+                {
+                    return context.LoadFromAssemblyPath(assemblyPath);
+                }
+
+                string[] filelist = Directory.GetFiles(_moduleDirectory, $"{assemblyName.Name}.dll", SearchOption.AllDirectories);
+                if (filelist.Length > 0)
+                {
+                    return context.LoadFromAssemblyPath(filelist[0]);
+                }
+                return null;
             }
         }
     }

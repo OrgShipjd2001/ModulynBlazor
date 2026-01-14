@@ -13,7 +13,7 @@ echo Publish Debug
 dotnet publish ModulynServer\ModulynServer.csproj -o %pubDebDir%\ModulynServer --no-self-contained -c Debug -r win-x64
 if errorlevel 1 goto BuildError
 
-dotnet publish ModulynInterface\ModulynInterface.csproj -o %pubDebDir%\ModulynInterface --no-self-contained -c Debug
+dotnet build ModulynInterface\ModulynInterface.csproj -o %pubDebDir%\ModulynInterface --no-self-contained -c Debug
 if errorlevel 1 goto BuildError
 
 dotnet publish Test\TestModule\TestModule.csproj -o %pubDebDir%\Modules\TestModule --no-self-contained -c Debug -r win-x64
@@ -25,7 +25,7 @@ echo Publish Release
 dotnet publish ModulynServer\ModulynServer.csproj -o %pubRelDir%\ModulynServer --no-self-contained -c Release -r win-x64
 if errorlevel 1 goto BuildError
 
-dotnet publish ModulynInterface\ModulynInterface.csproj -o %pubRelDir%\ModulynInterface --no-self-contained -c Release
+dotnet build ModulynInterface\ModulynInterface.csproj -o %pubRelDir%\ModulynInterface --no-self-contained -c Release
 if errorlevel 1 goto BuildError
 
 dotnet publish Test\TestModule\TestModule.csproj -o %pubRelDir%\Modules\TestModule --no-self-contained -c Release -r win-x64
