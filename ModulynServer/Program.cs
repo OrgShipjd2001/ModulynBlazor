@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Modulyn.Server.Bl;
 using Modulyn.Server.Interface;
+using ModulynInterface;
 using ModulynServer.Components;
 using ModulynServer.Components.Account;
 using ModulynServer.Handlers;
@@ -71,6 +72,9 @@ namespace Modulyn.Server
                     });
                 }
             });
+
+            // Register ModulynAuth for DI
+            builder.Services.AddScoped<IModulynAuth, ModulynAuth>();
 
             // Add module services
             foreach (IWebServerModule module in moduleManager.GetModuleList())
