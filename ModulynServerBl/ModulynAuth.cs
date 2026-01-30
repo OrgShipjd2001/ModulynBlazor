@@ -1,6 +1,7 @@
-﻿using Modulyn.Server.Interface;
+﻿using Microsoft.AspNetCore.Components.Authorization;
+using Modulyn.Server.Interface;
 using ModulynInterface;
-using Microsoft.AspNetCore.Components.Authorization;
+using System.Security.Claims;
 
 namespace Modulyn.Server.Bl
 {
@@ -32,7 +33,25 @@ namespace Modulyn.Server.Bl
 
             var authState = await _authenticationStateProvider.GetAuthenticationStateAsync();
             var user = authState.User;
-            return user.Identity?.IsAuthenticated == true && user.IsInRole(role.ToString());
+
+            if (!user.Identity?.IsAuthenticated == true)
+                return false;
+
+            var roles = user.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList();
+            roles.AddRange(user.FindAll("role").Select(c => c.Value));
+
+            List<string> allowedRoles = new List<string>();
+            for (int i = (int)role; i > 0; i--)
+            {
+                allowedRoles.Add(((ModulynAuthRole)i).ToString());
+            }
+
+            if (roles.Any(r => allowedRoles.Contains(r, StringComparer.OrdinalIgnoreCase)))
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 }
