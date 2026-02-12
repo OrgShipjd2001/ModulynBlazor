@@ -35,7 +35,6 @@ namespace Modulyn.Server.Bl
         public void AddModule(IWebServerModule module, AssemblyLoadContext loadContext)
         {
             m_moduleList.Add(module.ModuleId, new ModuleContextInfo { Module = module, LoadContext = loadContext });
-
             List<IWebModuleNavEntry> navEntries = module.GetModuleNavEntries();
 
             WebServerNavItem rootItem = NavManager.GetModuleRoot(module.ModuleId);

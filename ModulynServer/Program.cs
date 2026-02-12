@@ -24,8 +24,18 @@ namespace Modulyn.Server
             string logPath = Path.Combine(asmPath, "Logs");
             if (!Directory.Exists(logPath))
                 Directory.CreateDirectory(logPath);
-            string logFile = Path.Combine(logPath, "Log_ModulynServer.log");
+
+            string globallogFile = Path.Combine(logPath, "Log_ModulynServer.log");
+            Logging.CreateLogFile(globallogFile);
+
+            string logFile = Path.Combine(logPath, "Log_ModulynServer_Modulyn.log");
             Logging.CreateLogFile(logFile, "Modulyn");
+
+            AppDomain.CurrentDomain.UnhandledException += (sender, eventArgs) =>
+            {
+                Exception ex = (Exception)eventArgs.ExceptionObject;
+                Logging.LogError("Unhandled exception: " + ex.ToString(), "Modulyn");
+            };
 
             Logging.LogInfo("Begin WebApplicationBuilder part", "Modulyn");
 
