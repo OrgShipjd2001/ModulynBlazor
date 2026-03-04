@@ -20,11 +20,14 @@ namespace Modulyn.Server
     {
         public static async Task Main(string[] args)
         {
+            bool applyMigrations = HasArg(args, "--migrate", "--migrations", "--apply-migrations");
+
             string asmPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             string logPath = Path.Combine(asmPath, "Logs");
             if (!Directory.Exists(logPath))
                 Directory.CreateDirectory(logPath);
 
+            Logging.CreateConsoleLog();
             string globallogFile = Path.Combine(logPath, "Log_ModulynServer.log");
             Logging.CreateLogFile(globallogFile);
 
@@ -118,6 +121,24 @@ namespace Modulyn.Server
 
             if (WebServerSettings.Instance.Authentication)
             {
+                // Support both the new command-line switch and the legacy file sentinel.
+                // Legacy sentinel file can still be used in environments where adding CLI args is difficult.
+                if (applyMigrations || File.Exists(Path.Combine(asmPath, "runmigrations.txt")))
+                {
+                    Logging.LogInfo("Running database migrations", "Modulyn");
+                    using (var scope = app.Services.CreateScope())
+                    {
+                        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                        db.Database.Migrate();
+                    }
+
+                    if (File.Exists(Path.Combine(asmPath, "runmigrations.txt")))
+                    {
+                        Logging.LogInfo("Deleting migration sentinel file: runmigrations.txt", "Modulyn");
+                        File.Delete(Path.Combine(asmPath, "runmigrations.txt"));
+                    }
+                }
+
                 Logging.LogInfo("Add Authentication Seed Data", "Modulyn");
                 await CreateSeedData(app);
             }
@@ -203,17 +224,6 @@ namespace Modulyn.Server
 
             if (WebServerSettings.Instance.Authentication)
             {
-                if (File.Exists(Path.Combine(asmPath, "runmigrations.txt")))
-                {
-                    Logging.LogInfo("Running database migrations", "Modulyn");
-                    using (var scope = app.Services.CreateScope())
-                    {
-                        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                        db.Database.Migrate();
-                    }
-                    File.Delete(Path.Combine(asmPath, "runmigrations.txt"));
-                }
-
                 // Add additional endpoints required by the Identity /Account Razor components.
                 app.MapAdditionalIdentityEndpoints();
             }
@@ -340,6 +350,23 @@ namespace Modulyn.Server
                     });
                 }
             }
+        }
+
+        private static bool HasArg(string[] args, params string[] names)
+        {
+            if (args is null || args.Length == 0)
+                return false;
+
+            foreach (string arg in args)
+            {
+                foreach (string name in names)
+                {
+                    if (string.Equals(arg, name, StringComparison.OrdinalIgnoreCase))
+                        return true;
+                }
+            }
+
+            return false;
         }
 
         private static async Task CreateSeedData(WebApplication app)
