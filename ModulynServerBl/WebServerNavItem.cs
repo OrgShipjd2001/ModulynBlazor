@@ -20,6 +20,10 @@ namespace Modulyn.Server.Bl
                     {
                         _target = value.Substring(1);
                     }
+                    else
+                    {
+                        _target = value;
+                    }
                 }
                 else
                 {
