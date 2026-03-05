@@ -4,10 +4,29 @@ namespace Modulyn.Server.Bl
 {
     public class WebServerNavItem
     {
+        private string? _target = null;
+
         public string NavItemPath { get; set; } = string.Empty;
         public string NavItemName { get; set; } = string.Empty;
         public string ModuleId { get; set; } = string.Empty;
-        public string? Target { get; set; } = null;
+        public string? Target 
+        {
+            get => _target;
+            set
+            {
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    if (value.StartsWith("/"))
+                    {
+                        _target = value.Substring(1);
+                    }
+                }
+                else
+                {
+                    _target = value;
+                }
+            }
+        }
         public string? Icon { get; set; } = null;
         public ModulynAuthRole RequiredRole { get; set; } = 0;
 
