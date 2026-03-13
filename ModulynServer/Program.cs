@@ -100,16 +100,30 @@ namespace Modulyn.Server
                     foreach (ModuleBuilderService service in services)
                     {
                         Logging.LogInfo("Adding service: " + service.ServiceType.Name + " - " + service.ServiceScope.ToString() + " - " + service.Service?.GetType().Name, "Modulyn");
+
                         switch (service.ServiceScope)
                         {
                             case WebServiceScope.Singleton:
-                                builder.Services.AddSingleton(service.ServiceType, service.Service);
+                                if (service.Service != null)
+                                    builder.Services.AddSingleton(service.ServiceType, service.Service);
+                                
+                                if ((service.Service == null) && (service.ImplementationType != null))
+                                    builder.Services.AddSingleton(service.ServiceType, service.ImplementationType);
                                 break;
                             case WebServiceScope.Transient:
-                                builder.Services.AddTransient(service.ServiceType);
+                                if (service.ImplementationType == null)
+                                    builder.Services.AddTransient(service.ServiceType);
+                                else
+                                    builder.Services.AddTransient(service.ServiceType, service.ImplementationType);
                                 break;
                             case WebServiceScope.Scoped:
-                                builder.Services.AddScoped(service.ServiceType);
+                                if (service.ImplementationType == null)
+                                    builder.Services.AddScoped(service.ServiceType);
+                                else
+                                    builder.Services.AddScoped(service.ServiceType, service.ImplementationType);
+                                break;
+                            case WebServiceScope.HostedService:
+                                    builder.Services.AddSingleton(typeof(IHostedService), service.ServiceType);
                                 break;
                         }
                     }
