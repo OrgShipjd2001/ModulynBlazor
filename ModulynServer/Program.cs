@@ -55,6 +55,13 @@ namespace Modulyn.Server
                 {
                     options.DetailedErrors = true;
                 }
+                options.DisconnectedCircuitRetentionPeriod = TimeSpan.FromMinutes(10);
+            })
+            .AddHubOptions(options =>
+            {
+                options.MaximumReceiveMessageSize = 100 * 1024 * 1024; // 100MB
+                options.KeepAliveInterval = TimeSpan.FromSeconds(15);
+                options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
             });
             builder.Services.AddControllers();
             builder.Services.AddSingleton(WebServerSettings.Instance);
