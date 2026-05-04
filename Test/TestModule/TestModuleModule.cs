@@ -23,12 +23,14 @@ namespace TestModule
         {
             List<IWebModuleNavEntry> retList = new List<IWebModuleNavEntry>();
 
-            retList.Add(new TestModuleNavItem(string.Empty, "Test Module", null, Image));
+            retList.Add(new TestModuleNavItem(string.Empty, "Test Module", null, Image, "TestModuleUsers"));
             retList.Add(new TestModuleNavItem("Test Module", "Test1", null, "img/testbutton.jpg", "TestModuleAdmins"));
             retList.Add(new TestModuleNavItem("Test Module\\Test1", "Test Module 1", "/testmodule", "img/testbutton.jpg", "TestModuleAdmins"));
-            retList.Add(new TestModuleNavItem("Test Module", "TestModule2", null, "img/testkeyboard.jpg", ModulynAuthRole.PowerUser));
-            retList.Add(new TestModuleNavItem("Test Module\\TestModule2", "Test2", null, "img/testkeyboard.jpg", ModulynAuthRole.PowerUser));
-            retList.Add(new TestModuleNavItem("Test Module\\TestModule2\\Test2", "Test Module 2.2", "/testmodule2", "img/testkeyboard.jpg", ModulynAuthRole.PowerUser));
+            retList.Add(new TestModuleNavItem("Test Module", "TestModule2", null, "img/testkeyboard.jpg", "TestModulePowerUsers"));
+            retList.Add(new TestModuleNavItem("Test Module\\TestModule2", "Test2", null, "img/testkeyboard.jpg", "TestModulePowerUsers"));
+            retList.Add(new TestModuleNavItem("Test Module\\TestModule2\\Test2", "Test Module 2.2", "/testmodule2", "img/testkeyboard.jpg", "TestModulePowerUsers"));
+            retList.Add(new TestModuleNavItem("Test Module", "Test3", null, "img/testbutton.jpg", "TestModuleUsers"));
+            retList.Add(new TestModuleNavItem("Test Module\\Test3", "Test Module 3", "/testmodule3", "img/testbutton.jpg", "TestModuleUsers"));
 
             return retList;
         }
@@ -48,13 +50,14 @@ namespace TestModule
             return ModuleAppUseFlags.None;
         }
 
-        public List<string>? GetRequiredUserGroups()
+        public List<ModuleUserGroupDefinition>? GetRequiredUserGroups()
         {
-            List<string> groupList = new List<string>();
-            groupList.Add("TestModuleAdmins");
-            groupList.Add("TestModulePowerUsers");
-            groupList.Add("TestModuleUsers");
-            return groupList;
+            return new()
+            {
+                new ModuleUserGroupDefinition { Name = "TestModuleAdmins", IncludesGroups= { SystemGroupNames.Admins } },
+                new ModuleUserGroupDefinition { Name = "TestModulePowerUsers", IncludesGroups = { "TestModuleAdmins", SystemGroupNames.PowerUsers } },
+                new ModuleUserGroupDefinition { Name = "TestModuleUsers", IncludesGroups = { "TestModulePowerUsers", SystemGroupNames.Users } },
+            };
         }
     }
 }

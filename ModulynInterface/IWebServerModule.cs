@@ -27,6 +27,6 @@ namespace Modulyn.Server.Interface
         /// Return the list of user groups this module requires/uses. The host can use this for
         /// seeding and validation (e.g., ensuring groups exist in the auth DB).
         /// </summary>
-        List<string>? GetRequiredUserGroups();
+        List<ModuleUserGroupDefinition>? GetRequiredUserGroups();
     }
 }

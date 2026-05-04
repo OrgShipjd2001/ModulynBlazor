@@ -21,16 +21,26 @@
 }
 else
 {
-    <RadzenDataGrid @ref=groupDataGrid Data="@groups" TItem="ApplicationGroup" AllowSorting="true" AllowFiltering="true"
+    <RadzenDataGrid @ref=groupDataGrid Data="@groups" TItem="ApplicationGroup" AllowSorting="true" AllowFiltering="true" AllowColumnResize="true"
                     PageSize="10" AllowPaging="true"
                     EmptyText="No groups found."
                     Density="Density.Compact">
         <Columns>
             <RadzenDataGridColumn TItem="ApplicationGroup" Property="Id" Title="ID" Visible="false" />
             <RadzenDataGridColumn TItem="ApplicationGroup" Property="Name" Title="Name" Width="250px" />
+            <RadzenDataGridColumn TItem="ApplicationGroup" Title="System" Width="90px">
+                <Template Context="group">
+                    @(group.IsSystem ? "Yes" : "No")
+                </Template>
+            </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="ApplicationGroup" Title="Members" Width="120px">
                 <Template Context="group">
                     @memberCounts.GetValueOrDefault(group.Id, 0)
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ApplicationGroup" Title="Child Groups" Width="140px">
+                <Template Context="group">
+                    @childGroupCounts.GetValueOrDefault(group.Id, 0)
                 </Template>
             </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="ApplicationGroup" Title="Actions" Width="120px" TextAlign="TextAlign.Center" Frozen="true">
@@ -48,6 +58,8 @@ else
 @code {
     private List<ApplicationGroup>? groups;
     private Dictionary<Guid, int> memberCounts = new();
+    private Dictionary<Guid, int> childGroupCounts = new();
+    private Dictionary<Guid, int> parentGroupCounts = new();
     private RadzenDataGrid<ApplicationGroup>? groupDataGrid;
 
     protected override async Task OnInitializedAsync()
@@ -67,6 +79,20 @@ else
                 .ToListAsync();
 
             memberCounts = counts.ToDictionary(x => x.GroupId, x => x.Count);
+
+            var childCounts = await _db.GroupGroups
+                .GroupBy(gg => gg.ParentGroupId)
+                .Select(g => new { GroupId = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            childGroupCounts = childCounts.ToDictionary(x => x.GroupId, x => x.Count);
+
+            var parentCounts = await _db.GroupGroups
+                .GroupBy(gg => gg.ChildGroupId)
+                .Select(g => new { GroupId = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            parentGroupCounts = parentCounts.ToDictionary(x => x.GroupId, x => x.Count);
         }
         catch (Exception ex)
         {
@@ -104,21 +130,43 @@ else
 
     private async Task DeleteGroup(ApplicationGroup groupToDelete)
     {
-        var count = memberCounts.GetValueOrDefault(groupToDelete.Id, 0);
+        // Reload the latest entity to avoid deleting a detached/stale instance.
+        var group = await _db.Groups.FirstOrDefaultAsync(g => g.Id == groupToDelete.Id);
+        if (group == null)
+        {
+            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Warning, Summary = "Not found", Detail = "Group no longer exists." });
+            return;
+        }
+
+        if (group.IsSystem)
+        {
+            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Warning, Summary = "Not allowed", Detail = "System groups cannot be deleted." });
+            return;
+        }
+
+        var count = memberCounts.GetValueOrDefault(group.Id, 0);
         if (count > 0)
         {
             NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Warning, Summary = "Not allowed", Detail = "Cannot delete a group that still has members." });
             return;
         }
 
-        var result = await DialogService.Confirm($"Are you sure you want to delete group '{groupToDelete.Name}'?", "Confirm Deletion",
+        var childCount = childGroupCounts.GetValueOrDefault(group.Id, 0);
+        var parentCount = parentGroupCounts.GetValueOrDefault(group.Id, 0);
+        if (childCount > 0 || parentCount > 0)
+        {
+            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Warning, Summary = "Not allowed", Detail = "Cannot delete a group that has group nesting references. Remove child/parent group links first." });
+            return;
+        }
+
+        var result = await DialogService.Confirm($"Are you sure you want to delete group '{group.Name}'?", "Confirm Deletion",
             new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
 
         if (result == true)
         {
             try
             {
-                _db.Groups.Remove(groupToDelete);
+                _db.Groups.Remove(group);
                 await _db.SaveChangesAsync();
 
                 await LoadGroups();

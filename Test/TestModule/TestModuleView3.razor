@@ -1,0 +1,11 @@
+﻿@page "/testmodule3"
+@using Microsoft.AspNetCore.Authorization
+@using Modulyn.Server.Interface
+@attribute [ModulynGroupAuthAttribute("TestModuleUsers")]
+
+<PageTitle>Test Module View 3</PageTitle>
+
+<div class="my-component">
+    This third component view is defined in the <strong>TestModule</strong> library.<br />
+    Visible to users
+</div>

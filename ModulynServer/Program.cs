@@ -438,12 +438,43 @@ namespace Modulyn.Server
                     }
                 }
 
-                // Seed a default group and ensure the seeded admin is a member
-                var adminsGroup = await db.Groups.FirstOrDefaultAsync(g => g.Name == "Admins");
+                // Seed default groups
+                var adminsGroup = await db.Groups.FirstOrDefaultAsync(g => g.Name == SystemGroupNames.Admins);
                 if (adminsGroup == null)
                 {
-                    adminsGroup = new ApplicationGroup { Name = "Admins" };
+                    adminsGroup = new ApplicationGroup { Name = SystemGroupNames.Admins, IsSystem = true };
                     db.Groups.Add(adminsGroup);
+                    await db.SaveChangesAsync();
+                }
+                else if (!adminsGroup.IsSystem)
+                {
+                    adminsGroup.IsSystem = true;
+                    await db.SaveChangesAsync();
+                }
+
+                var powerUsersGroup = await db.Groups.FirstOrDefaultAsync(g => g.Name == SystemGroupNames.PowerUsers);
+                if (powerUsersGroup == null)
+                {
+                    powerUsersGroup = new ApplicationGroup { Name = SystemGroupNames.PowerUsers, IsSystem = true };
+                    db.Groups.Add(powerUsersGroup);
+                    await db.SaveChangesAsync();
+                }
+                else if (!powerUsersGroup.IsSystem)
+                {
+                    powerUsersGroup.IsSystem = true;
+                    await db.SaveChangesAsync();
+                }
+
+                var usersGroup = await db.Groups.FirstOrDefaultAsync(g => g.Name == SystemGroupNames.Users);
+                if (usersGroup == null)
+                {
+                    usersGroup = new ApplicationGroup { Name = SystemGroupNames.Users, IsSystem = true };
+                    db.Groups.Add(usersGroup);
+                    await db.SaveChangesAsync();
+                }
+                else if (!usersGroup.IsSystem)
+                {
+                    usersGroup.IsSystem = true;
                     await db.SaveChangesAsync();
                 }
 
@@ -464,17 +495,72 @@ namespace Modulyn.Server
                     if (required == null)
                         continue;
 
-                    foreach (var groupNameRaw in required)
+                    foreach (var def in required)
                     {
-                        var groupName = (groupNameRaw ?? string.Empty).Trim();
+                        var groupName = (def?.Name ?? string.Empty).Trim();
                         if (string.IsNullOrWhiteSpace(groupName))
                             continue;
 
-                        var existing = await db.Groups.FirstOrDefaultAsync(g => g.Name == groupName);
+                        var existing = await db.Groups
+                            .OrderByDescending(g => g.IsSystem)
+                            .FirstOrDefaultAsync(g => g.Name.ToLower() == groupName.ToLower());
                         if (existing == null)
                         {
-                            db.Groups.Add(new ApplicationGroup { Name = groupName });
+                            db.Groups.Add(new ApplicationGroup { Name = groupName, IsSystem = true });
                             await db.SaveChangesAsync();
+                        }
+                        else if (!existing.IsSystem)
+                        {
+                            existing.IsSystem = true;
+                            await db.SaveChangesAsync();
+                        }
+                    }
+                }
+
+                // Ensure module-required group nesting exists (Parent contains Child)
+                foreach (var module in moduleManager.GetModuleList())
+                {
+                    var required = module.GetRequiredUserGroups();
+                    if (required == null)
+                        continue;
+
+                    foreach (var def in required)
+                    {
+                        if (def == null)
+                            continue;
+
+                        var parentName = (def.Name ?? string.Empty).Trim();
+                        if (string.IsNullOrWhiteSpace(parentName))
+                            continue;
+
+                        var parent = await db.Groups
+                            .OrderByDescending(g => g.IsSystem)
+                            .FirstOrDefaultAsync(g => g.Name.ToLower() == parentName.ToLower());
+                        if (parent == null)
+                            continue;
+
+                        foreach (var childRaw in def.IncludesGroups ?? new List<string>())
+                        {
+                            var childName = (childRaw ?? string.Empty).Trim();
+                            if (string.IsNullOrWhiteSpace(childName))
+                                continue;
+
+                            var child = await db.Groups
+                                .OrderByDescending(g => g.IsSystem)
+                                .FirstOrDefaultAsync(g => g.Name.ToLower() == childName.ToLower());
+                            if (child == null)
+                            {
+                                child = new ApplicationGroup { Name = childName };
+                                db.Groups.Add(child);
+                                await db.SaveChangesAsync();
+                            }
+
+                            bool linkExists = await db.GroupGroups.AnyAsync(gg => gg.ParentGroupId == parent.Id && gg.ChildGroupId == child.Id);
+                            if (!linkExists)
+                            {
+                                db.GroupGroups.Add(new ApplicationGroupGroup { ParentGroupId = parent.Id, ChildGroupId = child.Id });
+                                await db.SaveChangesAsync();
+                            }
                         }
                     }
                 }
