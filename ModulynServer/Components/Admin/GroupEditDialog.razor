@@ -28,7 +28,7 @@
                                             Placeholder="Select user" Class="w-100" />
                         </div>
                         <RadzenButton Text="Add" Icon="person_add" ButtonStyle="ButtonStyle.Primary"
-                                      Disabled="@(string.IsNullOrWhiteSpace(userToAddId) || Group.Id == Guid.Empty)"
+                                      Disabled="@(string.IsNullOrWhiteSpace(userToAddId) || groupId == Guid.Empty)"
                                       Click="@(async () => await AddUserToGroup())" />
                     </RadzenStack>
 
@@ -40,6 +40,35 @@
                                 <Template Context="m">
                                     <RadzenButton Icon="person_remove" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
                                                   Click="@(async () => await RemoveUserFromGroup(m.UserId))" />
+                                </Template>
+                            </RadzenDataGridColumn>
+                        </Columns>
+                    </RadzenDataGrid>
+                </RadzenStack>
+            </RadzenFieldset>
+
+            <RadzenFieldset Text="Child Groups" Style="margin-top: 0.5rem;">
+                <RadzenStack Orientation="Orientation.Vertical" Gap="0.75rem">
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.End">
+                        <div class="flex-grow-1">
+                            <RadzenText Text="Add child group" />
+                            <RadzenDropDown TValue="Guid" @bind-Value="@childGroupToAddId"
+                                            Data="@availableChildGroups" TextProperty="Name" ValueProperty="Id"
+                                            AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                            Placeholder="Select group" Class="w-100" />
+                        </div>
+                        <RadzenButton Text="Add" Icon="add" ButtonStyle="ButtonStyle.Primary"
+                                      Disabled="@(childGroupToAddId == Guid.Empty || groupId == Guid.Empty)"
+                                      Click="@(async () => await AddChildGroup())" />
+                    </RadzenStack>
+
+                    <RadzenDataGrid Data="@childGroups" TItem="ApplicationGroup" EmptyText="No child groups" Density="Density.Compact">
+                        <Columns>
+                            <RadzenDataGridColumn TItem="ApplicationGroup" Property="Name" Title="Group" />
+                            <RadzenDataGridColumn TItem="ApplicationGroup" Title="Actions" Width="100px" TextAlign="TextAlign.Center">
+                                <Template Context="g">
+                                    <RadzenButton Icon="remove" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
+                                                  Click="@(async () => await RemoveChildGroup(g.Id))" />
                                 </Template>
                             </RadzenDataGridColumn>
                         </Columns>
@@ -64,6 +93,10 @@
     private List<ApplicationUser> availableUsers = new();
     private string? userToAddId;
 
+    private List<ApplicationGroup> childGroups = new();
+    private List<ApplicationGroup> availableChildGroups = new();
+    private Guid childGroupToAddId;
+
     protected override async Task OnInitializedAsync()
     {
         groupId = Group.Id;
@@ -75,6 +108,10 @@
         members.Clear();
         availableUsers.Clear();
         userToAddId = null;
+
+        childGroups.Clear();
+        availableChildGroups.Clear();
+        childGroupToAddId = Guid.Empty;
 
         if (groupId == Guid.Empty)
             return;
@@ -100,6 +137,32 @@
         availableUsers = await _userManager.Users
             .Where(u => !memberUserIds.Contains(u.Id))
             .OrderBy(u => u.UserName)
+            .ToListAsync();
+
+        var directChildGroupIds = await _db.GroupGroups
+            .Where(gg => gg.ParentGroupId == groupId)
+            .Select(gg => gg.ChildGroupId)
+            .ToListAsync();
+
+        if (directChildGroupIds.Count > 0)
+        {
+            childGroups = await _db.Groups
+                .Where(g => directChildGroupIds.Contains(g.Id))
+                .OrderBy(g => g.Name)
+                .ToListAsync();
+        }
+
+        // Prevent cycles: a candidate child must not be the group itself and must not be (directly or indirectly)
+        // a parent of the current group.
+        var disallowed = await GroupMembershipResolver.GetEffectiveGroupNamesForGroupAsync(_db, groupId);
+        var disallowedIds = await _db.Groups
+            .Where(g => disallowed.Contains(g.Name))
+            .Select(g => g.Id)
+            .ToListAsync();
+
+        availableChildGroups = await _db.Groups
+            .Where(g => g.Id != groupId && !directChildGroupIds.Contains(g.Id) && !disallowedIds.Contains(g.Id))
+            .OrderBy(g => g.Name)
             .ToListAsync();
     }
 
@@ -145,6 +208,53 @@
         catch (DbUpdateException ex)
         {
             NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Error", Detail = ex.InnerException?.Message ?? ex.Message });
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Error", Detail = ex.Message });
+        }
+    }
+
+    private async Task AddChildGroup()
+    {
+        if (groupId == Guid.Empty || childGroupToAddId == Guid.Empty)
+            return;
+
+        try
+        {
+            bool exists = await _db.GroupGroups.AnyAsync(gg => gg.ParentGroupId == groupId && gg.ChildGroupId == childGroupToAddId);
+            if (!exists)
+            {
+                _db.GroupGroups.Add(new ApplicationGroupGroup { ParentGroupId = groupId, ChildGroupId = childGroupToAddId });
+                await _db.SaveChangesAsync();
+            }
+
+            await LoadMembershipAsync();
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Error", Detail = ex.Message });
+        }
+    }
+
+    private async Task RemoveChildGroup(Guid childId)
+    {
+        if (groupId == Guid.Empty)
+            return;
+
+        try
+        {
+            var links = await _db.GroupGroups
+                .Where(gg => gg.ParentGroupId == groupId && gg.ChildGroupId == childId)
+                .ToListAsync();
+
+            if (links.Count > 0)
+            {
+                _db.GroupGroups.RemoveRange(links);
+                await _db.SaveChangesAsync();
+            }
+
+            await LoadMembershipAsync();
         }
         catch (Exception ex)
         {

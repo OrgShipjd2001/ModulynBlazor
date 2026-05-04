@@ -12,4 +12,7 @@ public class ApplicationGroup
     public string Name { get; set; } = string.Empty;
 
     public ICollection<ApplicationUserGroup> UserGroups { get; set; } = new List<ApplicationUserGroup>();
+
+    public ICollection<ApplicationGroupGroup> ParentGroups { get; set; } = new List<ApplicationGroupGroup>();
+    public ICollection<ApplicationGroupGroup> ChildGroups { get; set; } = new List<ApplicationGroupGroup>();
 }

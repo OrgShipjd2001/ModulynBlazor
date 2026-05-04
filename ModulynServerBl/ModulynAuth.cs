@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components.Authorization;
 using Modulyn.Server.Interface;
 using ModulynInterface;
+using Modulyn.Server.Bl.IdentityGroups;
 using System.Security.Claims;
 
 namespace Modulyn.Server.Bl
@@ -52,6 +53,24 @@ namespace Modulyn.Server.Bl
             }
 
             return false;
+        }
+
+        public async Task<bool> IsInGroupAsync(string group)
+        {
+            if (!await IsAuthenticationEnabledAsync())
+                return true;
+
+            if (string.IsNullOrWhiteSpace(group))
+                return false;
+
+            var authState = await _authenticationStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            if (user?.Identity?.IsAuthenticated != true)
+                return false;
+
+            var groups = user.FindAll(GroupClaimTypes.Group).Select(c => c.Value);
+            return groups.Any(g => string.Equals(g, group, StringComparison.OrdinalIgnoreCase));
         }
     }
 }

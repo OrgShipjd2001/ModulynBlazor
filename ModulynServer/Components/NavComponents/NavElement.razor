@@ -1,8 +1,10 @@
 ﻿@using Microsoft.AspNetCore.Authorization
 @using ModulynServer.Handlers
+@using Modulyn.Server.Bl
 @inject IAuthorizationService AuthorizationService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject WebServerSettings svrSettings
+@implements IDisposable
 
 <RadzenPanelMenuItem class="item-with-icon" style="background-color:transparent" Visible="@elementVisible" Text="@NavItem.NavItemName" Path="@NavItem.Target" Image="@NavItem.Icon" @bind-Expanded="NavItem.Expanded" Click="OnItemClicked">
         @foreach (var subItem in authorizedChildren)
@@ -20,7 +22,31 @@
 
     private List<WebServerNavItem> authorizedChildren = new();
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
+    {
+        AuthenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
+    }
+
+    public void Dispose()
+    {
+        AuthenticationStateProvider.AuthenticationStateChanged -= OnAuthenticationStateChanged;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await RecomputeVisibilityAsync();
+    }
+
+    private async void OnAuthenticationStateChanged(Task<AuthenticationState> task)
+    {
+        await InvokeAsync(async () =>
+        {
+            await RecomputeVisibilityAsync();
+            StateHasChanged();
+        });
+    }
+
+    private async Task RecomputeVisibilityAsync()
     {
         if (svrSettings.Authentication)
         {
@@ -34,9 +60,14 @@
                         authorizedChildren.Add(subItem);
                 }
             }
+            else
+            {
+                authorizedChildren = new();
+            }
         }
         else
         {
+            elementVisible = true;
             authorizedChildren = NavItem.Children;
         }
     }
@@ -46,12 +77,19 @@
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         var user = authState.User;
 
-        // Build a requirement for this nav item
-        var requirement = new ModulynAuthRequirement(navItem.RequiredRole);
-
-        // Use your custom handler via the authorization service
-        var result = await AuthorizationService.AuthorizeAsync(user, null, requirement);
-        return result.Succeeded;
+        // If a group is specified, it takes priority over role.
+        if (!string.IsNullOrWhiteSpace(navItem.RequiredGroup))
+        {
+            var requirement = new ModulynGroupAuthRequirement(navItem.RequiredGroup);
+            var result = await AuthorizationService.AuthorizeAsync(user, null, requirement);
+            return result.Succeeded;
+        }
+        else
+        {
+            var requirement = new ModulynAuthRequirement(navItem.RequiredRole);
+            var result = await AuthorizationService.AuthorizeAsync(user, null, requirement);
+            return result.Succeeded;
+        }
     }
 
     void OnItemClicked(MenuItemEventArgs args)

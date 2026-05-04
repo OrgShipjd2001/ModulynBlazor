@@ -1,7 +1,7 @@
 ﻿@page "/testmodule"
 @using Microsoft.AspNetCore.Authorization
 @using Modulyn.Server.Interface
-@attribute [ModulynAuthAttribute(ModulynAuthRole.Admin)]
+@attribute [ModulynGroupAuthAttribute("TestModuleAdmins")]
 
 <PageTitle>Test Module View 1</PageTitle>
 

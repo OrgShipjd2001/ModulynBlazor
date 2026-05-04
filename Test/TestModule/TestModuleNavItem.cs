@@ -14,6 +14,8 @@ namespace TestModule
 
         public ModulynAuthRole AuthenticationRole { get; set; } = ModulynAuthRole.User;
 
+        public string? AuthenticationGroup { get; set; } = null;
+
         public TestModuleNavItem()
         {
         }
@@ -33,6 +35,11 @@ namespace TestModule
         public TestModuleNavItem(string navItemPath, string navItemName, string? target, string icon, ModulynAuthRole role) : this(navItemPath, navItemName, target, icon)
         {
             AuthenticationRole = role;
+        }
+
+        public TestModuleNavItem(string navItemPath, string navItemName, string? target, string icon, string authGroup) : this(navItemPath, navItemName, target, icon)
+        {
+            AuthenticationGroup = authGroup;
         }
     }
 }

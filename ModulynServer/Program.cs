@@ -80,6 +80,7 @@ namespace Modulyn.Server
             builder.Services.AddSingleton<IAuthorizationPolicyProvider, ModulynAuthPolicyProvider>();
             builder.Services.AddSingleton<IAuthorizationHandler, ModulynGroupAuthHandler>();
             builder.Services.AddSingleton<IAuthorizationPolicyProvider, ModulynGroupAuthPolicyProvider>();
+            builder.Services.AddScoped<IClaimsTransformation, GroupClaimsTransformation>();
             builder.Services.AddAuthorization(options =>
             {
                 options.DefaultPolicy = new AuthorizationPolicyBuilder()
@@ -408,6 +409,7 @@ namespace Modulyn.Server
                 var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
                 var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
                 var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+                var moduleManager = scope.ServiceProvider.GetRequiredService<WebServerModuleManager>();
 
                 // Seed roles
                 string[] roleNames = Enum.GetNames(typeof(ModulynAuthRole));
@@ -452,6 +454,28 @@ namespace Modulyn.Server
                     {
                         db.UserGroups.Add(new ApplicationUserGroup { UserId = adminUser.Id, GroupId = adminsGroup.Id });
                         await db.SaveChangesAsync();
+                    }
+                }
+
+                // Ensure module-required groups exist
+                foreach (var module in moduleManager.GetModuleList())
+                {
+                    var required = module.GetRequiredUserGroups();
+                    if (required == null)
+                        continue;
+
+                    foreach (var groupNameRaw in required)
+                    {
+                        var groupName = (groupNameRaw ?? string.Empty).Trim();
+                        if (string.IsNullOrWhiteSpace(groupName))
+                            continue;
+
+                        var existing = await db.Groups.FirstOrDefaultAsync(g => g.Name == groupName);
+                        if (existing == null)
+                        {
+                            db.Groups.Add(new ApplicationGroup { Name = groupName });
+                            await db.SaveChangesAsync();
+                        }
                     }
                 }
             }

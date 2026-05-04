@@ -39,9 +39,9 @@
                                 Class="w-100" Name="Role" AllowClear="false" />
             </div>
             <div>
-                <RadzenText Text="User Group" />
-                <RadzenDropDown TValue="string" @bind-Value="@selectedGroup" Data="@availableGroupNames"
-                                Class="w-100" Name="UserGroup" AllowClear="true" Placeholder="(none)" />
+                <RadzenText Text="User Groups" />
+                <RadzenDropDown TValue="IEnumerable<string>" @bind-Value="@selectedGroups" Data="@availableGroupNames"
+                                Class="w-100" Name="UserGroups" Multiple="true" AllowClear="true" Placeholder="(none)" />
             </div>
         </RadzenStack>
     </div>
@@ -63,7 +63,7 @@
 
     private string password;
     private string userRole;
-    private string? selectedGroup;
+    private IEnumerable<string> selectedGroups = Array.Empty<string>();
     private List<string> availaleRoleNames = new List<string>();
     private List<string> availableGroupNames = new List<string>();
 
@@ -89,11 +89,13 @@
         // Load current group membership (single-select UI: first group wins)
         if (!string.IsNullOrWhiteSpace(User.Id))
         {
-            selectedGroup = await _db.UserGroups
+            var existingGroups = await _db.UserGroups
                 .Where(ug => ug.UserId == User.Id)
                 .Select(ug => ug.Group.Name)
                 .OrderBy(n => n)
-                .FirstOrDefaultAsync();
+                .ToListAsync();
+
+            selectedGroups = existingGroups;
         }
     }
 
@@ -152,17 +154,32 @@
                     _db.UserGroups.RemoveRange(existing);
                 }
 
-                if (!string.IsNullOrWhiteSpace(selectedGroup))
-                {
-                    var group = await _db.Groups.FirstOrDefaultAsync(g => g.Name == selectedGroup);
-                    if (group == null)
-                    {
-                        group = new ApplicationGroup { Name = selectedGroup };
-                        _db.Groups.Add(group);
-                        await _db.SaveChangesAsync();
-                    }
+                var selected = (selectedGroups ?? Array.Empty<string>())
+                    .Where(g => !string.IsNullOrWhiteSpace(g))
+                    .Select(g => g.Trim())
+                    .Where(g => !string.IsNullOrWhiteSpace(g))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
 
-                    _db.UserGroups.Add(new ApplicationUserGroup { UserId = User.Id, GroupId = group.Id });
+                if (selected.Count > 0)
+                {
+                    var groups = await _db.Groups
+                        .Where(g => selected.Contains(g.Name))
+                        .ToListAsync();
+
+                    foreach (var name in selected)
+                    {
+                        var group = groups.FirstOrDefault(g => string.Equals(g.Name, name, StringComparison.OrdinalIgnoreCase));
+                        if (group == null)
+                        {
+                            group = new ApplicationGroup { Name = name };
+                            _db.Groups.Add(group);
+                            await _db.SaveChangesAsync();
+                            groups.Add(group);
+                        }
+
+                        _db.UserGroups.Add(new ApplicationUserGroup { UserId = User.Id, GroupId = group.Id });
+                    }
                 }
 
                 await _db.SaveChangesAsync();

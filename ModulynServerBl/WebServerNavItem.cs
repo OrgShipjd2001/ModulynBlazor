@@ -33,6 +33,7 @@ namespace Modulyn.Server.Bl
         }
         public string? Icon { get; set; } = null;
         public ModulynAuthRole RequiredRole { get; set; } = 0;
+        public string? RequiredGroup { get; set; } = null;
 
         public bool Expanded { get; set; } = false;
 

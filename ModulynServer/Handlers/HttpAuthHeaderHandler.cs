@@ -92,12 +92,9 @@ namespace ModulynServer.Handlers
             foreach (var role in userRoles)
                 claims.Add(new Claim(ClaimTypes.Role, role));
 
-            var groupNames = await _db.UserGroups
-                .Where(ug => ug.UserId == user.Id)
-                .Select(ug => ug.Group.Name)
-                .ToListAsync();
-
-            foreach (var groupName in groupNames.Distinct(StringComparer.OrdinalIgnoreCase))
+            // Emit effective (transitive) group memberships so group nesting is honored.
+            var groupNames = await GroupMembershipResolver.GetEffectiveGroupNamesForUserAsync(_db, user.Id);
+            foreach (var groupName in groupNames)
                 claims.Add(new Claim(GroupClaimTypes.Group, groupName));
 
             claims.AddRange(userClaims);

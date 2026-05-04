@@ -21,8 +21,12 @@ public sealed class ModulynGroupAuthHandler : AuthorizationHandler<ModulynGroupA
             return Task.CompletedTask;
         }
 
-        var groups = user.FindAll(GroupClaimTypes.Group).Select(c => c.Value).ToList();
-        if (groups.Any(g => string.Equals(g, requirement.RequiredGroup, StringComparison.OrdinalIgnoreCase)))
+        var groups = user.FindAll(GroupClaimTypes.Group)
+            .Select(c => c.Value)
+            .Where(v => !string.IsNullOrWhiteSpace(v))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        if (groups.Contains(requirement.RequiredGroup))
         {
             context.Succeed(requirement);
             return Task.CompletedTask;

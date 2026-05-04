@@ -23,5 +23,7 @@
         string? Icon { get; }
         ModulynAuthRole AuthenticationRole { get; }
 
+        string? AuthenticationGroup { get; }
+
     }
 }

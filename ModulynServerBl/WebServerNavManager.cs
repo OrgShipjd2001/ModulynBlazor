@@ -36,6 +36,7 @@ namespace Modulyn.Server.Bl
             navItem.Target = entry.Target;
             navItem.Icon = entry.Icon;
             navItem.RequiredRole = entry.AuthenticationRole;
+            navItem.RequiredGroup = entry.AuthenticationGroup;
 
             if (string.IsNullOrWhiteSpace(navItem.NavItemPath))
             {
@@ -56,6 +57,7 @@ namespace Modulyn.Server.Bl
             navItem.Target = entry.Target;
             navItem.Icon = entry.Icon;
             navItem.RequiredRole = entry.AuthenticationRole;
+            navItem.RequiredGroup = entry.AuthenticationGroup;
 
             WebServerNavItem parent = rootItem;
             if (!string.IsNullOrWhiteSpace(entry.NavItemPath))

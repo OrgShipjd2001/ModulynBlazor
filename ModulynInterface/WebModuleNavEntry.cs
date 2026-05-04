@@ -12,6 +12,12 @@
 
         public ModulynAuthRole AuthenticationRole { get; set; } = ModulynAuthRole.User;
 
+        /// <summary>
+        /// Optional group-based requirement for navigation visibility/access.
+        /// If set, the host can require the current user to be in this group.
+        /// </summary>
+        public string? AuthenticationGroup { get; set; } = null;
+
         public WebModuleNavEntry()
         {
         }
@@ -35,6 +41,11 @@
         public WebModuleNavEntry(string navItemPath, string navItemName, string? target, string icon, ModulynAuthRole role) : this(navItemPath, navItemName, target, icon)
         {
             AuthenticationRole = role;
+        }
+
+        public WebModuleNavEntry(string navItemPath, string navItemName, string? target, string icon, string group) : this(navItemPath, navItemName, target, icon)
+        {
+            AuthenticationGroup = group;
         }
     }
 }

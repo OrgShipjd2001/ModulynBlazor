@@ -13,6 +13,7 @@ namespace Modulyn.Server.Bl
 
         public DbSet<ApplicationGroup> Groups => Set<ApplicationGroup>();
         public DbSet<ApplicationUserGroup> UserGroups => Set<ApplicationUserGroup>();
+        public DbSet<ApplicationGroupGroup> GroupGroups => Set<ApplicationGroupGroup>();
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -36,6 +37,21 @@ namespace Modulyn.Server.Bl
                     .WithMany(g => g.UserGroups)
                     .HasForeignKey(x => x.GroupId)
                     .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            builder.Entity<ApplicationGroupGroup>(b =>
+            {
+                b.HasKey(x => new { x.ParentGroupId, x.ChildGroupId });
+
+                b.HasOne(x => x.ParentGroup)
+                    .WithMany(g => g.ChildGroups)
+                    .HasForeignKey(x => x.ParentGroupId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                b.HasOne(x => x.ChildGroup)
+                    .WithMany(g => g.ParentGroups)
+                    .HasForeignKey(x => x.ChildGroupId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
         }
 
