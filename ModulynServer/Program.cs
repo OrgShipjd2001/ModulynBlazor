@@ -311,7 +311,7 @@ namespace Modulyn.Server
             builder.Services.AddIdentityCore<ApplicationUser>(
                 options =>
                 {
-                    options.SignIn.RequireConfirmedAccount = true;
+                    options.SignIn.RequireConfirmedAccount = false;
                     options.Password.RequireDigit = true;
                     options.Password.RequiredLength = 8;
                     options.Password.RequireNonAlphanumeric = false;
