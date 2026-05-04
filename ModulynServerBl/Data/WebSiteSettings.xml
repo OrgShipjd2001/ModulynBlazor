@@ -3,11 +3,11 @@
 	<WebSiteName>Modulyn Server</WebSiteName>		<!-- display name of the web site -->
 	<SiteImage>ModulynBlazor.jpg</SiteImage>		<!-- url to the web site image -->
 	<ShowHomeItem>true</ShowHomeItem>			<!-- turns the site default home page on or off -->
-	<ModulesPath>D:\GIT\Framework\modulynblazor\binaries\Publish\Debug\Modules</ModulesPath>			<!-- Can be a full directory path or a subdirectory name -->
+	<ModulesPath>Modules</ModulesPath>			<!-- Can be a full directory path or a subdirectory name -->
 	<StartupPage></StartupPage>					<!-- Override / redirect the home page to the set page -->
 	<Authentication>
-		<Enabled>true</Enabled>
-		<AuthDbConnectionString>Server=DBServer.cherion.net;Database=ModulynAuthTest;User Id=IntSvcDbUser;Password=int$svc$db$user$1;MultipleActiveResultSets=true;Encrypt=False</AuthDbConnectionString>
+		<Enabled>false</Enabled>
+		<AuthDbConnectionString></AuthDbConnectionString>
 		<AuthSettings>
 			<Provider>HTTPAuthHeader</Provider>
 			<Enabled>false</Enabled>
@@ -16,7 +16,7 @@
 		</AuthSettings>
 		<AuthSettings>
 			<Provider>Local</Provider>
-			<Enabled>true</Enabled>
+			<Enabled>false</Enabled>
 		</AuthSettings>
 		<AuthSettings>
 			<Provider>EntraId</Provider>
