@@ -1,10 +1,12 @@
 @using Microsoft.EntityFrameworkCore
 @using Modulyn.Server.Bl
 @using Modulyn.Server.Bl.IdentityGroups
+@using Microsoft.AspNetCore.Identity
 
 @inject Radzen.DialogService DialogService
 @inject Radzen.NotificationService NotificationService
 @inject ApplicationDbContext _db
+@inject UserManager<ApplicationUser> _userManager
 
 <RadzenTemplateForm TItem="ApplicationGroup" Data="@Group" Submit="@HandleSubmit">
     <div class="rz-p-4">
@@ -14,6 +16,36 @@
                 <RadzenTextBox @bind-Value="@Group.Name" Class="w-100" Name="GroupName" Required="true" />
                 <RadzenRequiredValidator Component="GroupName" Text="Group name is required" Popup="true" />
             </div>
+
+            <RadzenFieldset Text="Members" Style="margin-top: 0.5rem;">
+                <RadzenStack Orientation="Orientation.Vertical" Gap="0.75rem">
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.End">
+                        <div class="flex-grow-1">
+                            <RadzenText Text="Add user" />
+                            <RadzenDropDown TValue="string" @bind-Value="@userToAddId"
+                                            Data="@availableUsers" TextProperty="UserName" ValueProperty="Id"
+                                            AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                            Placeholder="Select user" Class="w-100" />
+                        </div>
+                        <RadzenButton Text="Add" Icon="person_add" ButtonStyle="ButtonStyle.Primary"
+                                      Disabled="@(string.IsNullOrWhiteSpace(userToAddId) || Group.Id == Guid.Empty)"
+                                      Click="@(async () => await AddUserToGroup())" />
+                    </RadzenStack>
+
+                    <RadzenDataGrid Data="@members" TItem="GroupMemberRow" EmptyText="No members" Density="Density.Compact">
+                        <Columns>
+                            <RadzenDataGridColumn TItem="GroupMemberRow" Property="UserName" Title="Username" />
+                            <RadzenDataGridColumn TItem="GroupMemberRow" Property="Email" Title="Email" />
+                            <RadzenDataGridColumn TItem="GroupMemberRow" Title="Actions" Width="100px" TextAlign="TextAlign.Center">
+                                <Template Context="m">
+                                    <RadzenButton Icon="person_remove" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
+                                                  Click="@(async () => await RemoveUserFromGroup(m.UserId))" />
+                                </Template>
+                            </RadzenDataGridColumn>
+                        </Columns>
+                    </RadzenDataGrid>
+                </RadzenStack>
+            </RadzenFieldset>
         </RadzenStack>
     </div>
     <div class="rz-p-4 rz-pt-0 d-flex justify-content-end">
@@ -26,6 +58,51 @@
     [Parameter]
     public ApplicationGroup Group { get; set; } = new();
 
+    private Guid groupId;
+
+    private List<GroupMemberRow> members = new();
+    private List<ApplicationUser> availableUsers = new();
+    private string? userToAddId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        groupId = Group.Id;
+        await LoadMembershipAsync();
+    }
+
+    private async Task LoadMembershipAsync()
+    {
+        members.Clear();
+        availableUsers.Clear();
+        userToAddId = null;
+
+        if (groupId == Guid.Empty)
+            return;
+
+        var memberUserIds = await _db.UserGroups
+            .Where(ug => ug.GroupId == groupId)
+            .Select(ug => ug.UserId)
+            .ToListAsync();
+
+        if (memberUserIds.Count > 0)
+        {
+            var memberUsers = await _userManager.Users
+                .Where(u => memberUserIds.Contains(u.Id))
+                .Select(u => new { u.Id, u.UserName, u.Email })
+                .ToListAsync();
+
+            members = memberUsers
+                .OrderBy(u => u.UserName)
+                .Select(u => new GroupMemberRow(u.Id, u.UserName ?? string.Empty, u.Email))
+                .ToList();
+        }
+
+        availableUsers = await _userManager.Users
+            .Where(u => !memberUserIds.Contains(u.Id))
+            .OrderBy(u => u.UserName)
+            .ToListAsync();
+    }
+
     private async Task HandleSubmit()
     {
         try
@@ -37,19 +114,32 @@
                 return;
             }
 
-            // ApplicationGroup.Id defaults to a new Guid, so Guid.Empty isn't a reliable "is-new" check.
-            // Decide Add vs Update based on whether it exists in the database.
-            var existing = await _db.Groups.AsNoTracking().FirstOrDefaultAsync(g => g.Id == Group.Id);
-            if (existing == null)
+            // Persist only the group name. The dialog's `Group` instance is detached and may be stale
+            // after membership edits; calling Update(Group) can trigger concurrency exceptions.
+            if (groupId == Guid.Empty)
+                groupId = Group.Id;
+
+            // Detach any already-tracked ApplicationGroup with the same key to avoid duplicate tracking.
+            var local = _db.ChangeTracker.Entries<ApplicationGroup>()
+                .FirstOrDefault(e => e.Entity.Id == groupId);
+            if (local != null)
+                local.State = EntityState.Detached;
+
+            var tracked = await _db.Groups.FirstOrDefaultAsync(g => g.Id == groupId);
+            if (tracked == null)
             {
-                _db.Groups.Add(Group);
+                tracked = new ApplicationGroup { Id = groupId, Name = Group.Name };
+                _db.Groups.Add(tracked);
             }
             else
             {
-                _db.Groups.Update(Group);
+                tracked.Name = Group.Name;
             }
 
             await _db.SaveChangesAsync();
+
+            // For a new group, Group.Id is known after SaveChanges; load membership UI state
+            await LoadMembershipAsync();
             DialogService.Close(true);
         }
         catch (DbUpdateException ex)
@@ -63,4 +153,53 @@
     }
 
     private void Cancel() => DialogService.Close(false);
+
+    private async Task AddUserToGroup()
+    {
+        if (groupId == Guid.Empty || string.IsNullOrWhiteSpace(userToAddId))
+            return;
+
+        try
+        {
+            bool exists = await _db.UserGroups.AnyAsync(ug => ug.GroupId == groupId && ug.UserId == userToAddId);
+            if (!exists)
+            {
+                _db.UserGroups.Add(new ApplicationUserGroup { GroupId = groupId, UserId = userToAddId });
+                await _db.SaveChangesAsync();
+            }
+
+            await LoadMembershipAsync();
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Error", Detail = ex.Message });
+        }
+    }
+
+    private async Task RemoveUserFromGroup(string userId)
+    {
+        if (groupId == Guid.Empty)
+            return;
+
+        try
+        {
+            var links = await _db.UserGroups
+                .Where(ug => ug.GroupId == groupId && ug.UserId == userId)
+                .ToListAsync();
+
+            if (links.Count > 0)
+            {
+                _db.UserGroups.RemoveRange(links);
+                await _db.SaveChangesAsync();
+            }
+
+            await LoadMembershipAsync();
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Error", Detail = ex.Message });
+        }
+    }
+
+    private sealed record GroupMemberRow(string UserId, string UserName, string? Email);
 }
