@@ -21,7 +21,7 @@
                 <RadzenRequiredValidator Component="Email" Text="Email is required" Popup="true" />
                 <RadzenEmailValidator Component="Email" Text="Invalid email format" Popup="true" />
             </div>
-            @if (string.IsNullOrEmpty(User.Id)) // Only ask for password when adding new user
+            @if (NewUser) // Only ask for password when adding new user
             {
                 <div>
                     <RadzenText Text="Password" />
@@ -46,6 +46,9 @@
     [Parameter]
     public ApplicationUser User { get; set; } = new ApplicationUser();
 
+    [Parameter]
+    public bool NewUser { get; set; } = true;
+
     private string password;
     private string userRole;
     private List<string> availaleRoleNames = new List<string>();
@@ -65,7 +68,7 @@
     {
         try
         {
-            if (string.IsNullOrEmpty(User.Id))
+            if (NewUser)
             {
                 await _userManager.CreateAsync(User, password);
             }

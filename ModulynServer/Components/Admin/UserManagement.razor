@@ -99,7 +99,7 @@ else
             new ApplicationUser(); // Default role for new users
 
         var result = await DialogService.OpenAsync<UserEditDialog>(dialogTitle,
-            new Dictionary<string, object>() { { "User", userEditDto } },
+            new Dictionary<string, object>() { { "User", userEditDto }, { "NewUser", userToEdit == null } },
             new DialogOptions() { Width = "500px", Height = "auto", CloseDialogOnEsc = true, Resizable = false, Draggable = true });
 
         if (result != null && (bool)result) // Dialog returns true if saved successfully
