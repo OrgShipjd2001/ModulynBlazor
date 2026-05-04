@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Modulyn.Server.Bl;
+using Modulyn.Server.Bl.IdentityGroups;
 using Modulyn.Server.Interface;
 using ModulynInterface;
 using ModulynServer.Components;
@@ -77,6 +78,8 @@ namespace Modulyn.Server
             // Authentication must always be configured, even if authentication is disabled
             builder.Services.AddSingleton<IAuthorizationHandler, ModulynAuthHandler>();
             builder.Services.AddSingleton<IAuthorizationPolicyProvider, ModulynAuthPolicyProvider>();
+            builder.Services.AddSingleton<IAuthorizationHandler, ModulynGroupAuthHandler>();
+            builder.Services.AddSingleton<IAuthorizationPolicyProvider, ModulynGroupAuthPolicyProvider>();
             builder.Services.AddAuthorization(options =>
             {
                 options.DefaultPolicy = new AuthorizationPolicyBuilder()
@@ -86,7 +89,14 @@ namespace Modulyn.Server
 
                 foreach(ModulynAuthRole role in Enum.GetValues(typeof(ModulynAuthRole)))
                 {
+                    // Keep supporting role-name policies, even though pages use the prefixed policy name
                     options.AddPolicy(role.ToString(), policy =>
+                    {
+                        policy.AddRequirements(new ModulynAuthRequirement(role));
+                    });
+
+                    // Support ModulynAuthAttribute's policy name format: "PageAccessPolicy:{Role}"
+                    options.AddPolicy($"PageAccessPolicy:{role}", policy =>
                     {
                         policy.AddRequirements(new ModulynAuthRequirement(role));
                     });
@@ -395,6 +405,7 @@ namespace Modulyn.Server
             // Seed roles and admin user
             using (var scope = app.Services.CreateScope())
             {
+                var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
                 var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
                 var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
@@ -422,6 +433,25 @@ namespace Modulyn.Server
                     if (result.Succeeded)
                     {
                         await userManager.AddToRoleAsync(adminUser, "Admin");
+                    }
+                }
+
+                // Seed a default group and ensure the seeded admin is a member
+                var adminsGroup = await db.Groups.FirstOrDefaultAsync(g => g.Name == "Admins");
+                if (adminsGroup == null)
+                {
+                    adminsGroup = new ApplicationGroup { Name = "Admins" };
+                    db.Groups.Add(adminsGroup);
+                    await db.SaveChangesAsync();
+                }
+
+                if (adminUser != null)
+                {
+                    bool isMember = await db.UserGroups.AnyAsync(ug => ug.UserId == adminUser.Id && ug.GroupId == adminsGroup.Id);
+                    if (!isMember)
+                    {
+                        db.UserGroups.Add(new ApplicationUserGroup { UserId = adminUser.Id, GroupId = adminsGroup.Id });
+                        await db.SaveChangesAsync();
                     }
                 }
             }

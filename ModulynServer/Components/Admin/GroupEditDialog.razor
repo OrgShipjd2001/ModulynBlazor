@@ -1,0 +1,66 @@
+@using Microsoft.EntityFrameworkCore
+@using Modulyn.Server.Bl
+@using Modulyn.Server.Bl.IdentityGroups
+
+@inject Radzen.DialogService DialogService
+@inject Radzen.NotificationService NotificationService
+@inject ApplicationDbContext _db
+
+<RadzenTemplateForm TItem="ApplicationGroup" Data="@Group" Submit="@HandleSubmit">
+    <div class="rz-p-4">
+        <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
+            <div>
+                <RadzenText Text="Group name" />
+                <RadzenTextBox @bind-Value="@Group.Name" Class="w-100" Name="GroupName" Required="true" />
+                <RadzenRequiredValidator Component="GroupName" Text="Group name is required" Popup="true" />
+            </div>
+        </RadzenStack>
+    </div>
+    <div class="rz-p-4 rz-pt-0 d-flex justify-content-end">
+        <RadzenButton ButtonType="ButtonType.Submit" Text="Save" Icon="save" ButtonStyle="ButtonStyle.Primary" Class="rz-mr-2" />
+        <RadzenButton Text="Cancel" Icon="cancel" ButtonStyle="ButtonStyle.Light" Click="@Cancel" />
+    </div>
+</RadzenTemplateForm>
+
+@code {
+    [Parameter]
+    public ApplicationGroup Group { get; set; } = new();
+
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            Group.Name = (Group.Name ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(Group.Name))
+            {
+                NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Error", Detail = "Group name is required" });
+                return;
+            }
+
+            // ApplicationGroup.Id defaults to a new Guid, so Guid.Empty isn't a reliable "is-new" check.
+            // Decide Add vs Update based on whether it exists in the database.
+            var existing = await _db.Groups.AsNoTracking().FirstOrDefaultAsync(g => g.Id == Group.Id);
+            if (existing == null)
+            {
+                _db.Groups.Add(Group);
+            }
+            else
+            {
+                _db.Groups.Update(Group);
+            }
+
+            await _db.SaveChangesAsync();
+            DialogService.Close(true);
+        }
+        catch (DbUpdateException ex)
+        {
+            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Error", Detail = ex.InnerException?.Message ?? ex.Message });
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Error", Detail = ex.Message });
+        }
+    }
+
+    private void Cancel() => DialogService.Close(false);
+}

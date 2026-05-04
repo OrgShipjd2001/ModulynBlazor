@@ -84,6 +84,17 @@
         userMgr.Parent = adminNav;
         adminNav.Children.Add(userMgr);
 
+        WebServerNavItem groupMgr = new WebServerNavItem()
+        {
+            NavItemPath = "Admin",
+            NavItemName = "Group Management",
+            Target = "/groupmanagement",
+            Icon = "UserManagment.png",
+            RequiredRole = ModulynAuthRole.Admin
+        };
+        groupMgr.Parent = adminNav;
+        adminNav.Children.Add(groupMgr);
+
         return adminNav;
     }
 }

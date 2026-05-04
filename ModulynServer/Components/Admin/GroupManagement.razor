@@ -1,0 +1,135 @@
+@page "/groupmanagement"
+@using Microsoft.EntityFrameworkCore
+@using Modulyn.Server.Bl
+@using Modulyn.Server.Bl.IdentityGroups
+@using Modulyn.Server.Interface
+@attribute [ModulynAuthAttribute(ModulynAuthRole.Admin)]
+
+@inject Radzen.DialogService DialogService
+@inject Radzen.NotificationService NotificationService
+@inject ApplicationDbContext _db
+
+<RadzenText Text="Group Management" TextType="TextType.H1" Class="rz-mb-4" />
+
+<div class="rz-mb-4 d-flex justify-content-end">
+    <RadzenButton Text="Add New Group" Icon="group_add" Click="@(async () => await OpenGroupDialog(null))" ButtonStyle="ButtonStyle.Primary" />
+</div>
+
+@if (groups == null)
+{
+    <p><em>Loading groups...</em></p>
+}
+else
+{
+    <RadzenDataGrid @ref=groupDataGrid Data="@groups" TItem="ApplicationGroup" AllowSorting="true" AllowFiltering="true"
+                    PageSize="10" AllowPaging="true"
+                    EmptyText="No groups found."
+                    Density="Density.Compact">
+        <Columns>
+            <RadzenDataGridColumn TItem="ApplicationGroup" Property="Id" Title="ID" Visible="false" />
+            <RadzenDataGridColumn TItem="ApplicationGroup" Property="Name" Title="Name" Width="250px" />
+            <RadzenDataGridColumn TItem="ApplicationGroup" Title="Members" Width="120px">
+                <Template Context="group">
+                    @memberCounts.GetValueOrDefault(group.Id, 0)
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ApplicationGroup" Title="Actions" Width="120px" TextAlign="TextAlign.Center" Frozen="true">
+                <Template Context="group">
+                    <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Info" Class="rz-mr-2"
+                                  Click="@(async () => await OpenGroupDialog(group))" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" />
+                    <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger"
+                                  Click="@(async () => await DeleteGroup(group))" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" />
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+}
+
+@code {
+    private List<ApplicationGroup>? groups;
+    private Dictionary<Guid, int> memberCounts = new();
+    private RadzenDataGrid<ApplicationGroup>? groupDataGrid;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadGroups();
+    }
+
+    private async Task LoadGroups()
+    {
+        try
+        {
+            groups = await _db.Groups.OrderBy(g => g.Name).ToListAsync();
+
+            var counts = await _db.UserGroups
+                .GroupBy(ug => ug.GroupId)
+                .Select(g => new { GroupId = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            memberCounts = counts.ToDictionary(x => x.GroupId, x => x.Count);
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Error", Detail = $"Could not load groups: {ex.Message}" });
+            groups = new List<ApplicationGroup>();
+        }
+    }
+
+    private async Task OpenGroupDialog(ApplicationGroup? groupToEdit)
+    {
+        var dialogTitle = groupToEdit == null ? "Add New Group" : "Edit Group";
+
+        ApplicationGroup dto;
+        if (groupToEdit == null)
+        {
+            dto = new ApplicationGroup();
+        }
+        else
+        {
+            dto = new ApplicationGroup { Id = groupToEdit.Id, Name = groupToEdit.Name };
+        }
+
+        var result = await DialogService.OpenAsync<GroupEditDialog>(dialogTitle,
+            new Dictionary<string, object>() { { "Group", dto } },
+            new DialogOptions() { Width = "450px", Height = "auto", CloseDialogOnEsc = true, Resizable = false, Draggable = true });
+
+        if (result != null && (bool)result)
+        {
+            await LoadGroups();
+            StateHasChanged();
+            if (groupDataGrid != null)
+                await groupDataGrid.Reload();
+        }
+    }
+
+    private async Task DeleteGroup(ApplicationGroup groupToDelete)
+    {
+        var count = memberCounts.GetValueOrDefault(groupToDelete.Id, 0);
+        if (count > 0)
+        {
+            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Warning, Summary = "Not allowed", Detail = "Cannot delete a group that still has members." });
+            return;
+        }
+
+        var result = await DialogService.Confirm($"Are you sure you want to delete group '{groupToDelete.Name}'?", "Confirm Deletion",
+            new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
+
+        if (result == true)
+        {
+            try
+            {
+                _db.Groups.Remove(groupToDelete);
+                await _db.SaveChangesAsync();
+
+                await LoadGroups();
+                StateHasChanged();
+                if (groupDataGrid != null)
+                    await groupDataGrid.Reload();
+            }
+            catch (Exception ex)
+            {
+                NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Error", Detail = $"Could not delete group: {ex.Message}" });
+            }
+        }
+    }
+}

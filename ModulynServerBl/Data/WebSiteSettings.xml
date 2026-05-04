@@ -6,8 +6,8 @@
 	<ModulesPath>Modules</ModulesPath>			<!-- Can be a full directory path or a subdirectory name -->
 	<StartupPage></StartupPage>					<!-- Override / redirect the home page to the set page -->
 	<Authentication>
-		<Enabled>false</Enabled>
-		<AuthDbConnectionString></AuthDbConnectionString>
+		<Enabled>true</Enabled>
+		<AuthDbConnectionString>Server=DBServer.cherion.net;Database=ModulynAuthTest;User Id=IntSvcDbUser;Password=int$svc$db$user$1;MultipleActiveResultSets=true;Encrypt=False</AuthDbConnectionString>
 		<AuthSettings>
 			<Provider>HTTPAuthHeader</Provider>
 			<Enabled>false</Enabled>
@@ -16,7 +16,7 @@
 		</AuthSettings>
 		<AuthSettings>
 			<Provider>Local</Provider>
-			<Enabled>false</Enabled>
+			<Enabled>true</Enabled>
 		</AuthSettings>
 		<AuthSettings>
 			<Provider>EntraId</Provider>

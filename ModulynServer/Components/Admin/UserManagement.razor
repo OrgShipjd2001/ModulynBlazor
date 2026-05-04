@@ -2,12 +2,16 @@
 @using Microsoft.AspNetCore.Identity
 @using Modulyn.Server.Interface
 @using ModulynServer.model
+@using Modulyn.Server.Bl
+@using Modulyn.Server.Bl.IdentityGroups
+@using Microsoft.EntityFrameworkCore
 @attribute [ModulynAuthAttribute(ModulynAuthRole.Admin)]
 
 @inject Radzen.DialogService DialogService
 @inject Radzen.NotificationService NotificationService
 @inject UserManager<ApplicationUser> _userManager
 @inject RoleManager<IdentityRole> _roleManager
+@inject ApplicationDbContext _db
 
 <RadzenText Text="User Management" TextType="TextType.H1" Class="rz-mb-4" />
 
@@ -45,6 +49,21 @@ else
                     }
                 </Template>
             </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="ApplicationUser" Title="Groups" Width="220px">
+                <Template Context="user">
+                    @if (user != null)
+                    {
+                        if (userGroups.TryGetValue(user.Id, out var groups) && groups.Count > 0)
+                        {
+                            <span>@string.Join(", ", groups)</span>
+                        }
+                        else
+                        {
+                            <span>None</span>
+                        }
+                    }
+                </Template>
+            </RadzenDataGridColumn>
             <RadzenDataGridColumn TItem="ApplicationUser" Title="Actions" Width="120px" TextAlign="TextAlign.Center" Frozen="true">
                 <Template Context="user">
                     <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Info" Class="rz-mr-2"
@@ -60,6 +79,8 @@ else
 @code {
     private List<ApplicationUser> users;
     private Dictionary<string, string> userRoles = new Dictionary<string, string>();
+    private Dictionary<string, List<string>> userGroups = new Dictionary<string, List<string>>();
+    private List<string> availableGroupNames = new List<string>();
     private RadzenDataGrid<ApplicationUser> userDataGrid;
 
     protected override async Task OnInitializedAsync()
@@ -77,11 +98,30 @@ else
             if (userRoles != null)
                 userRoles.Clear();
 
+            if (userGroups != null)
+                userGroups.Clear();
+
+            if (availableGroupNames != null)
+                availableGroupNames.Clear();
+
+            availableGroupNames = await _db.Groups
+                .OrderBy(g => g.Name)
+                .Select(g => g.Name)
+                .ToListAsync();
+
             users = _userManager.Users.ToList();
             foreach(ApplicationUser user in users)
             {
                 string role = await GetUserRole(user);
                 userRoles[user.Id] = !string.IsNullOrWhiteSpace(role) ? role : "No Role"; // Default role if none assigned
+
+                var groups = await _db.UserGroups
+                    .Where(ug => ug.UserId == user.Id)
+                    .Select(ug => ug.Group.Name)
+                    .OrderBy(n => n)
+                    .ToListAsync();
+
+                userGroups[user.Id] = groups;
             }
         }
         catch (Exception ex) 
@@ -99,7 +139,7 @@ else
             new ApplicationUser(); // Default role for new users
 
         var result = await DialogService.OpenAsync<UserEditDialog>(dialogTitle,
-            new Dictionary<string, object>() { { "User", userEditDto }, { "NewUser", userToEdit == null } },
+            new Dictionary<string, object>() { { "User", userEditDto }, { "NewUser", userToEdit == null }, { "AvailableGroupNames", availableGroupNames } },
             new DialogOptions() { Width = "500px", Height = "auto", CloseDialogOnEsc = true, Resizable = false, Draggable = true });
 
         if (result != null && (bool)result) // Dialog returns true if saved successfully

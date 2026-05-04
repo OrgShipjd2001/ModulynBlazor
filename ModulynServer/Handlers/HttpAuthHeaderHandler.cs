@@ -1,8 +1,10 @@
 ﻿using Azure.Core;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Modulyn.Server.Bl;
+using Modulyn.Server.Bl.IdentityGroups;
 using Radzen;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
@@ -16,6 +18,7 @@ namespace ModulynServer.Handlers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly ApplicationDbContext _db;
 
         public HttpAuthHeaderHandler(
             IOptionsMonitor<HttpAuthHeaderOptions> options,
@@ -23,11 +26,13 @@ namespace ModulynServer.Handlers
             UrlEncoder encoder,
             ISystemClock clock,
             UserManager<ApplicationUser> userManager,
-            SignInManager<ApplicationUser> signInManager)
+            SignInManager<ApplicationUser> signInManager,
+            ApplicationDbContext db)
             : base(options, logger, encoder, clock) 
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _db = db;
         }
 
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
@@ -86,6 +91,14 @@ namespace ModulynServer.Handlers
 
             foreach (var role in userRoles)
                 claims.Add(new Claim(ClaimTypes.Role, role));
+
+            var groupNames = await _db.UserGroups
+                .Where(ug => ug.UserId == user.Id)
+                .Select(ug => ug.Group.Name)
+                .ToListAsync();
+
+            foreach (var groupName in groupNames.Distinct(StringComparer.OrdinalIgnoreCase))
+                claims.Add(new Claim(GroupClaimTypes.Group, groupName));
 
             claims.AddRange(userClaims);
 

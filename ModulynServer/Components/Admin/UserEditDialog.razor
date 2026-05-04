@@ -1,11 +1,15 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using Modulyn.Server.Interface
 @using ModulynServer.model
+@using Modulyn.Server.Bl
+@using Modulyn.Server.Bl.IdentityGroups
+@using Microsoft.EntityFrameworkCore
 
 @inject Radzen.DialogService DialogService
 @inject Radzen.NotificationService NotificationService
 @inject UserManager<ApplicationUser> _userManager
 @inject RoleManager<IdentityRole> _roleManager
+@inject ApplicationDbContext _db
 
 <RadzenTemplateForm TItem="ApplicationUser" Data="@User" Submit="@HandleSubmit">
     <div class="rz-p-4">
@@ -34,6 +38,11 @@
                 <RadzenDropDown TValue="string" @bind-Value="@userRole" Data="@availaleRoleNames"
                                 Class="w-100" Name="Role" AllowClear="false" />
             </div>
+            <div>
+                <RadzenText Text="User Group" />
+                <RadzenDropDown TValue="string" @bind-Value="@selectedGroup" Data="@availableGroupNames"
+                                Class="w-100" Name="UserGroup" AllowClear="true" Placeholder="(none)" />
+            </div>
         </RadzenStack>
     </div>
     <div class="rz-p-4 rz-pt-0 d-flex justify-content-end">
@@ -49,9 +58,14 @@
     [Parameter]
     public bool NewUser { get; set; } = true;
 
+    [Parameter]
+    public List<string> AvailableGroupNames { get; set; } = new();
+
     private string password;
     private string userRole;
+    private string? selectedGroup;
     private List<string> availaleRoleNames = new List<string>();
+    private List<string> availableGroupNames = new List<string>();
 
     protected override async Task OnInitializedAsync()
     {
@@ -60,8 +74,27 @@
             availaleRoleNames.Add(role.Name);
         }
 
+        availableGroupNames = (AvailableGroupNames ?? new List<string>()).ToList();
+        if (availableGroupNames.Count == 0)
+        {
+            availableGroupNames = await _db.Groups
+                .OrderBy(g => g.Name)
+                .Select(g => g.Name)
+                .ToListAsync();
+        }
+
         IList<string> userRoles = await _userManager.GetRolesAsync(User);
         userRole = userRoles.FirstOrDefault() ?? ModulynAuthRole.User.ToString(); // Default to "User" if no roles assigned)
+
+        // Load current group membership (single-select UI: first group wins)
+        if (!string.IsNullOrWhiteSpace(User.Id))
+        {
+            selectedGroup = await _db.UserGroups
+                .Where(ug => ug.UserId == User.Id)
+                .Select(ug => ug.Group.Name)
+                .OrderBy(n => n)
+                .FirstOrDefaultAsync();
+        }
     }
 
     private async Task HandleSubmit()
@@ -70,12 +103,24 @@
         {
             if (NewUser)
             {
-                await _userManager.CreateAsync(User, password);
+                var createResult = await _userManager.CreateAsync(User, password);
+                if (!createResult.Succeeded)
+                {
+                    var reason = string.Join("; ", createResult.Errors.Select(e => e.Description));
+                    NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Error", Detail = reason });
+                    return;
+                }
             }
             else
             {
                 // Update existing user
-                await _userManager.UpdateAsync(User);
+                var updateResult = await _userManager.UpdateAsync(User);
+                if (!updateResult.Succeeded)
+                {
+                    var reason = string.Join("; ", updateResult.Errors.Select(e => e.Description));
+                    NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Error", Detail = reason });
+                    return;
+                }
             }
 
             bool roleAlreadyAssigned = false;
@@ -88,7 +133,40 @@
             }
 
             if (!roleAlreadyAssigned)
-                await _userManager.AddToRoleAsync(User, userRole); // Assign role to new user
+            {
+                var addRoleResult = await _userManager.AddToRoleAsync(User, userRole);
+                if (!addRoleResult.Succeeded)
+                {
+                    var reason = string.Join("; ", addRoleResult.Errors.Select(e => e.Description));
+                    NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Error", Detail = reason });
+                    return;
+                }
+            }
+
+            // Persist group membership (single-selected group)
+            if (!string.IsNullOrWhiteSpace(User.Id))
+            {
+                var existing = await _db.UserGroups.Where(ug => ug.UserId == User.Id).ToListAsync();
+                if (existing.Count > 0)
+                {
+                    _db.UserGroups.RemoveRange(existing);
+                }
+
+                if (!string.IsNullOrWhiteSpace(selectedGroup))
+                {
+                    var group = await _db.Groups.FirstOrDefaultAsync(g => g.Name == selectedGroup);
+                    if (group == null)
+                    {
+                        group = new ApplicationGroup { Name = selectedGroup };
+                        _db.Groups.Add(group);
+                        await _db.SaveChangesAsync();
+                    }
+
+                    _db.UserGroups.Add(new ApplicationUserGroup { UserId = User.Id, GroupId = group.Id });
+                }
+
+                await _db.SaveChangesAsync();
+            }
 
             DialogService.Close(true); // Close dialog and indicate success
         }
