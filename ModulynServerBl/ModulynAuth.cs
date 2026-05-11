@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.EntityFrameworkCore;
 using Modulyn.Server.Interface;
 using ModulynInterface;
 using Modulyn.Server.Bl.IdentityGroups;
@@ -9,10 +10,12 @@ namespace Modulyn.Server.Bl
     public class ModulynAuth : IModulynAuth
     {
         private readonly AuthenticationStateProvider _authenticationStateProvider;
+        private readonly ApplicationDbContext _db;
 
-        public ModulynAuth(AuthenticationStateProvider authenticationStateProvider)
+        public ModulynAuth(AuthenticationStateProvider authenticationStateProvider, ApplicationDbContext db)
         {
             _authenticationStateProvider = authenticationStateProvider;
+            _db = db;
         }
 
         public async Task<bool> IsAuthenticationEnabledAsync()
@@ -71,6 +74,28 @@ namespace Modulyn.Server.Bl
 
             var groups = user.FindAll(GroupClaimTypes.Group).Select(c => c.Value);
             return groups.Any(g => string.Equals(g, group, StringComparison.OrdinalIgnoreCase));
+        }
+
+        public async Task<IReadOnlyList<string>> GetAvailableGroupsAsync()
+        {
+            if (!await IsAuthenticationEnabledAsync())
+            {
+                return await _db.Groups
+                    .AsNoTracking()
+                    .OrderBy(g => g.Name)
+                    .Select(g => g.Name)
+                    .ToListAsync();
+            }
+
+            if ((!await IsAuthorizedAsync(ModulynAuthRole.Admin)) && (!await IsInGroupAsync(ModulynSystemGroupNames.Admins)))
+                throw new UnauthorizedAccessException("Only Admins can retrieve available groups.");
+
+            return await _db.Groups
+                .AsNoTracking()
+                .OrderBy(g => g.IsSystem)
+                .ThenBy(g => g.Name)
+                .Select(g => g.Name)
+                .ToListAsync();
         }
     }
 }

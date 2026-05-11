@@ -8,5 +8,7 @@ namespace ModulynInterface
         Task<bool> IsAuthenticatedAsync();
         Task<bool> IsAuthorizedAsync(ModulynAuthRole role);
         Task<bool> IsInGroupAsync(string group);
+
+        Task<IReadOnlyList<string>> GetAvailableGroupsAsync();
     }
 }
