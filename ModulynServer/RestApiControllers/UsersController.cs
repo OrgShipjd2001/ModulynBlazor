@@ -1,6 +1,6 @@
 ﻿
 // Controllers/UsersApiController.cs (in your Blazor Server project)
-using Microsoft.AspNetCore.Authorization; // For authorization
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +10,9 @@ using ModulynServer.model;
 
 namespace ModulynServer.RestApiControllers
 {
-    [ModulynAuthAttribute(ModulynAuthRole.Admin)]
+    [RestApiAuth]
+    [ModulynAuth(ModulynAuthRole.Admin)]
+    [ModulynGroupAuth(ModulynSystemGroupNames.Admins)]
     [ApiController]
     [Route("api/[controller]")]
     public class UsersController : ControllerBase

@@ -1,0 +1,174 @@
+@page "/Account/Security"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Modulyn.Server.Interface
+@using Modulyn.Server.Bl
+@attribute [Authorize]
+
+@inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider AuthStateProvider
+@inject ModulynServer.Services.PersonalAccessTokenService TokenService
+@inject Radzen.NotificationService NotificationService
+
+<RadzenText Text="Security" TextType="TextType.H1" Class="rz-mb-4" />
+
+<RadzenText Text="Personal Access Tokens" TextType="TextType.H2" Class="rz-mb-2" />
+
+<div class="rz-mb-4">
+    <RadzenTemplateForm TItem="Security" Data="this" Submit="CreateToken">
+        <div class="row">
+            <div class="col-md-4 rz-pb-2">
+                <RadzenTextBox @bind-Value="_newTokenName" Name="TokenName" Placeholder="Token name" Style="width:100%" />
+            </div>
+            <div class="col-md-4 rz-pb-2">
+                <RadzenDropDown @bind-Value="_expiryDays" Data="_expiryOptions" TextProperty="Text" ValueProperty="Value" Style="width:100%" />
+            </div>
+            <div class="col-md-4 rz-pb-2">
+                <RadzenButton Text="Create token" ButtonStyle="ButtonStyle.Primary" Type="submit" Disabled="@(!_canCreate)" />
+            </div>
+        </div>
+    </RadzenTemplateForm>
+
+    @if (!string.IsNullOrWhiteSpace(_newTokenSecret))
+    {
+        <div class="alert alert-warning rz-mt-3">
+            <div><strong>Copy this token now.</strong> It will not be shown again.</div>
+            <div class="rz-mt-2" style="font-family:monospace; word-break:break-all;">@_newTokenSecret</div>
+        </div>
+    }
+</div>
+
+@if (_tokens is null)
+{
+    <p><em>Loading tokens...</em></p>
+}
+else
+{
+    <RadzenDataGrid Data="_tokens" TItem="PersonalAccessToken" AllowPaging="true" PageSize="10" Density="Density.Compact" EmptyText="No tokens created.">
+        <Columns>
+            <RadzenDataGridColumn TItem="PersonalAccessToken" Property="Name" Title="Name" />
+            <RadzenDataGridColumn TItem="PersonalAccessToken" Title="Created">
+                <Template Context="t">@t.CreatedUtc.ToLocalTime().ToString("g")</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="PersonalAccessToken" Title="Expires">
+                <Template Context="t">@(t.ExpiresUtc.HasValue ? t.ExpiresUtc.Value.ToLocalTime().ToString("g") : "Never")</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="PersonalAccessToken" Title="Status">
+                <Template Context="t">
+                    @if (t.RevokedUtc.HasValue)
+                    {
+                        <span>Revoked</span>
+                    }
+                    else if (t.ExpiresUtc.HasValue && t.ExpiresUtc.Value <= DateTimeOffset.UtcNow)
+                    {
+                        <span>Expired</span>
+                    }
+                    else
+                    {
+                        <span>Active</span>
+                    }
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="PersonalAccessToken" Title="Actions" Width="120px">
+                <Template Context="t">
+                    <RadzenButton Icon="cancel" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
+                                  Disabled="@(t.RevokedUtc.HasValue)" Click="@(async () => await RevokeToken(t))" />
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+}
+
+@code {
+    private ApplicationUser? _user;
+    private List<PersonalAccessToken>? _tokens;
+
+    private string _newTokenName = string.Empty;
+    private string? _newTokenSecret;
+
+    private int _expiryDays = 30;
+    private readonly List<ExpiryOption> _expiryOptions = new()
+    {
+        new("30 days", 30),
+        new("90 days", 90),
+        new("180 days", 180),
+        new("1 year", 365),
+        new("Never", 0)
+    };
+
+    private bool _canCreate => _user is not null && !string.IsNullOrWhiteSpace(_newTokenName);
+
+    private sealed record ExpiryOption(string Text, int Value);
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await AuthStateProvider.GetAuthenticationStateAsync();
+        _user = await UserManager.GetUserAsync(state.User);
+
+        if (_user is not null)
+            _tokens = await TokenService.GetTokensForUserAsync(_user.Id, CancellationToken.None);
+    }
+
+    private async Task CreateToken(Security _)
+    {
+        if (_user is null)
+            return;
+
+        try
+        {
+            _newTokenSecret = null;
+
+            DateTimeOffset? expires = _expiryDays <= 0 ? null : DateTimeOffset.UtcNow.AddDays(_expiryDays);
+            var result = await TokenService.CreateAsync(_user.Id, _newTokenName, expires, CancellationToken.None);
+
+            _newTokenSecret = result.PlainTextToken;
+            _newTokenName = string.Empty;
+
+            _tokens = await TokenService.GetTokensForUserAsync(_user.Id, CancellationToken.None);
+
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = "Token created",
+                Detail = "Copy the token now. It will not be shown again."
+            });
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Error",
+                Detail = ex.Message
+            });
+        }
+    }
+
+    private async Task RevokeToken(PersonalAccessToken token)
+    {
+        if (_user is null)
+            return;
+
+        try
+        {
+            await TokenService.RevokeAsync(_user.Id, token.Id, CancellationToken.None);
+            _tokens = await TokenService.GetTokensForUserAsync(_user.Id, CancellationToken.None);
+
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Info,
+                Summary = "Token revoked",
+                Detail = token.Name
+            });
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Error",
+                Detail = ex.Message
+            });
+        }
+    }
+}

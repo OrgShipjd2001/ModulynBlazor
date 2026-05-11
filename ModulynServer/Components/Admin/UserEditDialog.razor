@@ -162,8 +162,8 @@
                     .ToList();
 
                 // Ensure every new user is at least in the default Users group.
-                if (NewUser && !selected.Any(g => string.Equals(g, SystemGroupNames.Users, StringComparison.OrdinalIgnoreCase)))
-                    selected.Add(SystemGroupNames.Users);
+                if (NewUser && !selected.Any(g => string.Equals(g, ModulynSystemGroupNames.Users, StringComparison.OrdinalIgnoreCase)))
+                    selected.Add(ModulynSystemGroupNames.Users);
 
                 if (selected.Count > 0)
                 {

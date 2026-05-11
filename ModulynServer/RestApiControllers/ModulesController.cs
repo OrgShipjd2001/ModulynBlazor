@@ -1,12 +1,15 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Modulyn.Server.Interface;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Modulyn.Server.Bl;
+using Modulyn.Server.Interface;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace Modulyn.Server.RestApiControllers
 {
-    [ModulynAuthAttribute(ModulynAuthRole.PowerUser)]
+    [RestApiAuth]
+    [ModulynGroupAuth(ModulynSystemGroupNames.PowerUsers)]
+    [ModulynAuth(ModulynAuthRole.PowerUser)]
     [Route("api/[controller]")]
     [ApiController]
     public class ModulesController : ControllerBase

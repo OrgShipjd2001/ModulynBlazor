@@ -14,6 +14,7 @@ namespace Modulyn.Server.Bl
         public DbSet<ApplicationGroup> Groups => Set<ApplicationGroup>();
         public DbSet<ApplicationUserGroup> UserGroups => Set<ApplicationUserGroup>();
         public DbSet<ApplicationGroupGroup> GroupGroups => Set<ApplicationGroupGroup>();
+        public DbSet<PersonalAccessToken> PersonalAccessTokens => Set<PersonalAccessToken>();
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -52,6 +53,17 @@ namespace Modulyn.Server.Bl
                     .WithMany(g => g.ParentGroups)
                     .HasForeignKey(x => x.ChildGroupId)
                     .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            builder.Entity<PersonalAccessToken>(b =>
+            {
+                b.HasIndex(x => x.UserId);
+                b.HasIndex(x => x.TokenHash).IsUnique();
+
+                b.HasOne(x => x.User)
+                    .WithMany()
+                    .HasForeignKey(x => x.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
         }
 

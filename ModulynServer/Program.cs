@@ -1,10 +1,12 @@
 using Lumberjack.Interface;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.IdentityModel.Tokens;
 using Modulyn.Server.Bl;
 using Modulyn.Server.Bl.IdentityGroups;
 using Modulyn.Server.Interface;
@@ -12,8 +14,10 @@ using ModulynInterface;
 using ModulynServer.Components;
 using ModulynServer.Components.Account;
 using ModulynServer.Handlers;
+using ModulynServer.Services;
 using Radzen;
 using System.Reflection;
+using System.Text;
 
 namespace Modulyn.Server
 {
@@ -106,6 +110,8 @@ namespace Modulyn.Server
 
             // Register ModulynAuth for DI
             builder.Services.AddScoped<IModulynAuth, ModulynAuth>();
+
+            builder.Services.AddScoped<PersonalAccessTokenService>();
 
             // Add module services
             foreach (IWebServerModule module in moduleManager.GetModuleList())
@@ -303,6 +309,11 @@ namespace Modulyn.Server
             })
             .AddIdentityCookies();
 
+            // REST API authentication for non-browser clients.
+            // Uses a symmetric signing key configured via environment variable `MODULYN_API_JWT_KEY`.
+            // (You can later swap this to an external IdP / JWKS without changing controller code.)
+            // NOTE: You can later swap "ApiBearer" to JwtBearer (external IdP) without changing controllers.
+
             var connectionString = settings.AuthDbConnectionString;
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(connectionString));
@@ -439,10 +450,10 @@ namespace Modulyn.Server
                 }
 
                 // Seed default groups
-                var adminsGroup = await db.Groups.FirstOrDefaultAsync(g => g.Name == SystemGroupNames.Admins);
+                var adminsGroup = await db.Groups.FirstOrDefaultAsync(g => g.Name == ModulynSystemGroupNames.Admins);
                 if (adminsGroup == null)
                 {
-                    adminsGroup = new ApplicationGroup { Name = SystemGroupNames.Admins, IsSystem = true };
+                    adminsGroup = new ApplicationGroup { Name = ModulynSystemGroupNames.Admins, IsSystem = true };
                     db.Groups.Add(adminsGroup);
                     await db.SaveChangesAsync();
                 }
@@ -452,10 +463,10 @@ namespace Modulyn.Server
                     await db.SaveChangesAsync();
                 }
 
-                var powerUsersGroup = await db.Groups.FirstOrDefaultAsync(g => g.Name == SystemGroupNames.PowerUsers);
+                var powerUsersGroup = await db.Groups.FirstOrDefaultAsync(g => g.Name == ModulynSystemGroupNames.PowerUsers);
                 if (powerUsersGroup == null)
                 {
-                    powerUsersGroup = new ApplicationGroup { Name = SystemGroupNames.PowerUsers, IsSystem = true };
+                    powerUsersGroup = new ApplicationGroup { Name = ModulynSystemGroupNames.PowerUsers, IsSystem = true };
                     db.Groups.Add(powerUsersGroup);
                     await db.SaveChangesAsync();
                 }
@@ -465,10 +476,10 @@ namespace Modulyn.Server
                     await db.SaveChangesAsync();
                 }
 
-                var usersGroup = await db.Groups.FirstOrDefaultAsync(g => g.Name == SystemGroupNames.Users);
+                var usersGroup = await db.Groups.FirstOrDefaultAsync(g => g.Name == ModulynSystemGroupNames.Users);
                 if (usersGroup == null)
                 {
-                    usersGroup = new ApplicationGroup { Name = SystemGroupNames.Users, IsSystem = true };
+                    usersGroup = new ApplicationGroup { Name = ModulynSystemGroupNames.Users, IsSystem = true };
                     db.Groups.Add(usersGroup);
                     await db.SaveChangesAsync();
                 }

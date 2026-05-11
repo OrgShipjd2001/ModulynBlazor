@@ -54,9 +54,9 @@ namespace TestModule
         {
             return new()
             {
-                new ModuleUserGroupDefinition { Name = "TestModuleAdmins", IncludesGroups= { SystemGroupNames.Admins } },
-                new ModuleUserGroupDefinition { Name = "TestModulePowerUsers", IncludesGroups = { "TestModuleAdmins", SystemGroupNames.PowerUsers } },
-                new ModuleUserGroupDefinition { Name = "TestModuleUsers", IncludesGroups = { "TestModulePowerUsers", SystemGroupNames.Users } },
+                new ModuleUserGroupDefinition { Name = "TestModuleAdmins", IncludesGroups= { ModulynSystemGroupNames.Admins } },
+                new ModuleUserGroupDefinition { Name = "TestModulePowerUsers", IncludesGroups = { "TestModuleAdmins", ModulynSystemGroupNames.PowerUsers } },
+                new ModuleUserGroupDefinition { Name = "TestModuleUsers", IncludesGroups = { "TestModulePowerUsers", ModulynSystemGroupNames.Users } },
             };
         }
     }

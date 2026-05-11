@@ -18,14 +18,30 @@
                 <AuthorizeView Context="auth">
                     <Authorized>
                         <div class="nav-item px-1">
-                            <span style="font-size:10px">@auth.User.Identity?.Name</span>
+                            <div class="dropdown modulyn-user-menu">
+                                <button class="btn btn-outline-secondary btn-sm dropdown-toggle modulyn-user-menu__button" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    @auth.User.Identity?.Name
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end modulyn-user-menu__menu">
+                                    <li>
+                                        <NavLink class="dropdown-item modulyn-user-menu__item" href="Account/Security">Security</NavLink>
+                                    </li>
+                                    @if (!auth.User.Identity.AuthenticationType.Equals("HttpAuthHeader", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <li><hr class="dropdown-divider" /></li>
+                                        <li>
+                                            <form class="modulyn-user-menu__form" action="Account/Logout" method="post">
+                                                <AntiforgeryToken />
+                                                <input type="hidden" name="ReturnUrl" value="" />
+                                                <button type="submit" class="btn btn-outline-secondary btn-sm modulyn-user-menu__item">Logout</button>
+                                            </form>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
                             @if (!auth.User.Identity.AuthenticationType.Equals("HttpAuthHeader", StringComparison.OrdinalIgnoreCase))
                             {
-                                <form action="Account/Logout" method="post">
-                                    <AntiforgeryToken />
-                                    <input type="hidden" name="ReturnUrl" value="" />
-                                    <button type="submit" class="btn btn-outline-secondary btn-sm" style="font-size:10px">Logout</button>
-                                </form>
+                                
                             }
                         </div>
                     </Authorized>
