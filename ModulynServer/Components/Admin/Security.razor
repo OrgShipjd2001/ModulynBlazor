@@ -3,14 +3,38 @@
 @using Microsoft.AspNetCore.Identity
 @using Modulyn.Server.Interface
 @using Modulyn.Server.Bl
+@using Microsoft.EntityFrameworkCore
 @attribute [Authorize]
 
 @inject UserManager<ApplicationUser> UserManager
 @inject AuthenticationStateProvider AuthStateProvider
 @inject ModulynServer.Services.PersonalAccessTokenService TokenService
 @inject Radzen.NotificationService NotificationService
+@inject ApplicationDbContext Db
 
 <RadzenText Text="Security" TextType="TextType.H1" Class="rz-mb-4" />
+
+<RadzenText Text="Security Groups" TextType="TextType.H2" Class="rz-mb-2" />
+
+@if (_groups is null)
+{
+    <p><em>Loading groups...</em></p>
+}
+else if (_groups.Count == 0)
+{
+    <p><em>No groups assigned.</em></p>
+}
+else
+{
+    <div class="rz-mb-4">
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+            @foreach (var g in _groups)
+            {
+                <RadzenBadge Text="@g" Shade="Shade.Light" />
+            }
+        </RadzenStack>
+    </div>
+}
 
 <RadzenText Text="Personal Access Tokens" TextType="TextType.H2" Class="rz-mb-2" />
 
@@ -82,6 +106,7 @@ else
 @code {
     private ApplicationUser? _user;
     private List<PersonalAccessToken>? _tokens;
+    private List<string>? _groups;
 
     private string _newTokenName = string.Empty;
     private string? _newTokenSecret;
@@ -106,7 +131,15 @@ else
         _user = await UserManager.GetUserAsync(state.User);
 
         if (_user is not null)
+        {
+            _groups = await Db.UserGroups
+                .Where(ug => ug.UserId == _user.Id)
+                .Select(ug => ug.Group.Name)
+                .OrderBy(n => n)
+                .ToListAsync();
+
             _tokens = await TokenService.GetTokensForUserAsync(_user.Id, CancellationToken.None);
+        }
     }
 
     private async Task CreateToken(Security _)
