@@ -544,6 +544,12 @@ namespace Modulyn.Server
                         if (string.IsNullOrWhiteSpace(parentName))
                             continue;
 
+                        // If the module-defined parent group already exists, do not re-initialize its nesting.
+                        // This prevents resetting plugin group configuration on each server start.
+                        bool parentAlreadyExists = await db.Groups.AnyAsync(g => g.Name.ToLower() == parentName.ToLower());
+                        if (parentAlreadyExists)
+                            continue;
+
                         var parent = await db.Groups
                             .OrderByDescending(g => g.IsSystem)
                             .FirstOrDefaultAsync(g => g.Name.ToLower() == parentName.ToLower());
