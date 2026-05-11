@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Modulyn.Server.Interface
 {
-    [AttributeUsage(AttributeTargets.Class, Inherited = true, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, Inherited = true, AllowMultiple = false)]
     public class ModulynAuthAttribute : AuthorizeAttribute
     {
         private const string PolicyPrefix = "PageAccessPolicy:";
