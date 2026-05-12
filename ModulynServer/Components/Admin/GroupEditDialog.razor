@@ -17,64 +17,70 @@
                 <RadzenRequiredValidator Component="GroupName" Text="Group name is required" Popup="true" />
             </div>
 
-            <RadzenFieldset Text="Members" Style="margin-top: 0.5rem;">
-                <RadzenStack Orientation="Orientation.Vertical" Gap="0.75rem">
-                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.End">
-                        <div class="flex-grow-1">
-                            <RadzenText Text="Add user" />
-                            <RadzenDropDown TValue="string" @bind-Value="@userToAddId"
-                                            Data="@availableUsers" TextProperty="UserName" ValueProperty="Id"
-                                            AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
-                                            Placeholder="Select user" Class="w-100" />
-                        </div>
-                        <RadzenButton Text="Add" Icon="person_add" ButtonStyle="ButtonStyle.Primary"
-                                      Disabled="@(string.IsNullOrWhiteSpace(userToAddId) || groupId == Guid.Empty)"
-                                      Click="@(async () => await AddUserToGroup())" />
-                    </RadzenStack>
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" Style="flex-wrap: wrap; align-items: flex-start; margin-top: 0.5rem;">
+                <div style="flex: 1 1 420px; min-width: 420px;">
+                    <RadzenFieldset Text="Members">
+                        <RadzenStack Orientation="Orientation.Vertical" Gap="0.75rem">
+                            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.End">
+                                <div class="flex-grow-1">
+                                    <RadzenText Text="Add user" />
+                                    <RadzenDropDown TValue="string" @bind-Value="@userToAddId"
+                                                    Data="@availableUsers" TextProperty="UserName" ValueProperty="Id"
+                                                    AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                                    Placeholder="Select user" Class="w-100" />
+                                </div>
+                                <RadzenButton Text="Add" Icon="person_add" ButtonStyle="ButtonStyle.Primary"
+                                              Disabled="@(string.IsNullOrWhiteSpace(userToAddId) || groupId == Guid.Empty)"
+                                              Click="@(async () => await AddUserToGroup())" />
+                            </RadzenStack>
 
-                    <RadzenDataGrid Data="@members" TItem="GroupMemberRow" EmptyText="No members" Density="Density.Compact">
-                        <Columns>
-                            <RadzenDataGridColumn TItem="GroupMemberRow" Property="UserName" Title="Username" />
-                            <RadzenDataGridColumn TItem="GroupMemberRow" Property="Email" Title="Email" />
-                            <RadzenDataGridColumn TItem="GroupMemberRow" Title="Actions" Width="100px" TextAlign="TextAlign.Center">
-                                <Template Context="m">
-                                    <RadzenButton Icon="person_remove" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
-                                                  Click="@(async () => await RemoveUserFromGroup(m.UserId))" />
-                                </Template>
-                            </RadzenDataGridColumn>
-                        </Columns>
-                    </RadzenDataGrid>
-                </RadzenStack>
-            </RadzenFieldset>
+                            <RadzenDataGrid Data="@members" TItem="GroupMemberRow" EmptyText="No members" Density="Density.Compact">
+                                <Columns>
+                                    <RadzenDataGridColumn TItem="GroupMemberRow" Property="UserName" Title="Username" />
+                                    <RadzenDataGridColumn TItem="GroupMemberRow" Property="Email" Title="Email" />
+                                    <RadzenDataGridColumn TItem="GroupMemberRow" Title="Actions" Width="100px" TextAlign="TextAlign.Center">
+                                        <Template Context="m">
+                                            <RadzenButton Icon="person_remove" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
+                                                          Click="@(async () => await RemoveUserFromGroup(m.UserId))" />
+                                        </Template>
+                                    </RadzenDataGridColumn>
+                                </Columns>
+                            </RadzenDataGrid>
+                        </RadzenStack>
+                    </RadzenFieldset>
+                </div>
 
-            <RadzenFieldset Text="Child Groups" Style="margin-top: 0.5rem;">
-                <RadzenStack Orientation="Orientation.Vertical" Gap="0.75rem">
-                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.End">
-                        <div class="flex-grow-1">
-                            <RadzenText Text="Add child group" />
-                            <RadzenDropDown TValue="Guid" @bind-Value="@childGroupToAddId"
-                                            Data="@availableChildGroups" TextProperty="Name" ValueProperty="Id"
-                                            AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
-                                            Placeholder="Select group" Class="w-100" />
-                        </div>
-                        <RadzenButton Text="Add" Icon="add" ButtonStyle="ButtonStyle.Primary"
-                                      Disabled="@(childGroupToAddId == Guid.Empty || groupId == Guid.Empty)"
-                                      Click="@(async () => await AddChildGroup())" />
-                    </RadzenStack>
+                <div style="flex: 1 1 420px; min-width: 420px;">
+                    <RadzenFieldset Text="Child Groups">
+                        <RadzenStack Orientation="Orientation.Vertical" Gap="0.75rem">
+                            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.End">
+                                <div class="flex-grow-1">
+                                    <RadzenText Text="Add child group" />
+                                    <RadzenDropDown TValue="Guid" @bind-Value="@childGroupToAddId"
+                                                    Data="@availableChildGroups" TextProperty="Name" ValueProperty="Id"
+                                                    AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                                    Placeholder="Select group" Class="w-100" />
+                                </div>
+                                <RadzenButton Text="Add" Icon="add" ButtonStyle="ButtonStyle.Primary"
+                                              Disabled="@(childGroupToAddId == Guid.Empty || groupId == Guid.Empty)"
+                                              Click="@(async () => await AddChildGroup())" />
+                            </RadzenStack>
 
-                    <RadzenDataGrid Data="@childGroups" TItem="ApplicationGroup" EmptyText="No child groups" Density="Density.Compact">
-                        <Columns>
-                            <RadzenDataGridColumn TItem="ApplicationGroup" Property="Name" Title="Group" />
-                            <RadzenDataGridColumn TItem="ApplicationGroup" Title="Actions" Width="100px" TextAlign="TextAlign.Center">
-                                <Template Context="g">
-                                    <RadzenButton Icon="remove" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
-                                                  Click="@(async () => await RemoveChildGroup(g.Id))" />
-                                </Template>
-                            </RadzenDataGridColumn>
-                        </Columns>
-                    </RadzenDataGrid>
-                </RadzenStack>
-            </RadzenFieldset>
+                            <RadzenDataGrid Data="@childGroups" TItem="ApplicationGroup" EmptyText="No child groups" Density="Density.Compact">
+                                <Columns>
+                                    <RadzenDataGridColumn TItem="ApplicationGroup" Property="Name" Title="Group" />
+                                    <RadzenDataGridColumn TItem="ApplicationGroup" Title="Actions" Width="100px" TextAlign="TextAlign.Center">
+                                        <Template Context="g">
+                                            <RadzenButton Icon="remove" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall"
+                                                          Click="@(async () => await RemoveChildGroup(g.Id))" />
+                                        </Template>
+                                    </RadzenDataGridColumn>
+                                </Columns>
+                            </RadzenDataGrid>
+                        </RadzenStack>
+                    </RadzenFieldset>
+                </div>
+            </RadzenStack>
         </RadzenStack>
     </div>
     <div class="rz-p-4 rz-pt-0 d-flex justify-content-end">
@@ -230,6 +236,15 @@
             }
 
             await LoadMembershipAsync();
+        }
+        catch (DbUpdateException ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Error",
+                Detail = ex.InnerException?.Message ?? ex.Message
+            });
         }
         catch (Exception ex)
         {

@@ -117,7 +117,7 @@ else
 
         var result = await DialogService.OpenAsync<GroupEditDialog>(dialogTitle,
             new Dictionary<string, object>() { { "Group", dto } },
-            new DialogOptions() { Width = "450px", Height = "auto", CloseDialogOnEsc = true, Resizable = false, Draggable = true });
+            new DialogOptions() { Width = "1000px", Height = "auto", CloseDialogOnEsc = true, Resizable = true, Draggable = true });
 
         if (result != null && (bool)result)
         {
