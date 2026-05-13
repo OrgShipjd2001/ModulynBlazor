@@ -97,6 +97,10 @@
 
             selectedGroups = existingGroups;
         }
+        else if (NewUser)
+        {
+            selectedGroups = new[] { ModulynSystemGroupNames.Users };
+        }
     }
 
     private async Task HandleSubmit()
