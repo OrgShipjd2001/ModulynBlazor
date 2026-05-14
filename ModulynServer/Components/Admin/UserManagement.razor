@@ -5,7 +5,7 @@
 @using Modulyn.Server.Bl
 @using Modulyn.Server.Bl.IdentityGroups
 @using Microsoft.EntityFrameworkCore
-@attribute [ModulynAuthAttribute(ModulynAuthRole.Admin)]
+@attribute [ModulynGroupAuth(ModulynSystemGroupNames.Admins)]
 
 @inject Radzen.DialogService DialogService
 @inject Radzen.NotificationService NotificationService

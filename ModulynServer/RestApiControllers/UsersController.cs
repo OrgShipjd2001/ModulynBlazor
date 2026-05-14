@@ -11,7 +11,6 @@ using ModulynServer.model;
 namespace ModulynServer.RestApiControllers
 {
     [RestApiAuth]
-    [ModulynAuth(ModulynAuthRole.Admin)]
     [ModulynGroupAuth(ModulynSystemGroupNames.Admins)]
     [ApiController]
     [Route("api/[controller]")]

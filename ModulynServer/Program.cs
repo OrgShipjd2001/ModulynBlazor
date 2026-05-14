@@ -88,6 +88,7 @@ namespace Modulyn.Server
             builder.Services.AddAuthorization(options =>
             {
                 options.DefaultPolicy = new AuthorizationPolicyBuilder()
+                    .AddAuthenticationSchemes(RestApiAuthAttribute.SchemeName)
                     .RequireAuthenticatedUser()
                     .AddRequirements(new ModulynAuthRequirement())
                     .Build();
@@ -290,7 +291,6 @@ namespace Modulyn.Server
                     if (settings.IsAuthEnabled("HttpAuthHeader"))
                     {
                         var provider = settings.GetAuthProvider("HttpAuthHeader");
-                        // default to "X-User" when provider or setting is not present or empty
                         string userHeader = "X-User";
                         if (provider?.Properties != null &&
                             provider.Properties.TryGetValue("UserHeader", out var headerValue) &&
@@ -298,16 +298,19 @@ namespace Modulyn.Server
                         {
                             userHeader = headerValue;
                         }
-                        // Only use header scheme when X-User header exists
                         if (context.Request.Headers.ContainsKey(userHeader))
                             return "HttpAuthHeader";
                     }
-
-                    // Otherwise use the Identity application cookie
                     return IdentityConstants.ApplicationScheme;
                 };
             })
             .AddIdentityCookies();
+
+            // Add this separate call after AddIdentityCookies()
+            builder.Services.AddAuthentication()
+                .AddScheme<AuthenticationSchemeOptions, PersonalAccessTokenAuthenticationHandler>(
+                    RestApiAuthAttribute.SchemeName,
+                    _ => { });
 
             // REST API authentication for non-browser clients.
             // Uses a symmetric signing key configured via environment variable `MODULYN_API_JWT_KEY`.

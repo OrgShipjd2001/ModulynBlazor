@@ -3,7 +3,7 @@
 @using Modulyn.Server.Bl
 @using Modulyn.Server.Bl.IdentityGroups
 @using Modulyn.Server.Interface
-@attribute [ModulynAuthAttribute(ModulynAuthRole.Admin)]
+@attribute [ModulynGroupAuth(ModulynSystemGroupNames.Admins)]
 
 @inject Radzen.DialogService DialogService
 @inject Radzen.NotificationService NotificationService

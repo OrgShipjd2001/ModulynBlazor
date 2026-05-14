@@ -9,7 +9,6 @@ namespace Modulyn.Server.RestApiControllers
 {
     [RestApiAuth]
     [ModulynGroupAuth(ModulynSystemGroupNames.PowerUsers)]
-    [ModulynAuth(ModulynAuthRole.PowerUser)]
     [Route("api/[controller]")]
     [ApiController]
     public class ModulesController : ControllerBase

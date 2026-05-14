@@ -70,7 +70,8 @@
             NavItemPath = string.Empty,
             NavItemName = "Admin",
             Icon = "AdminSettings.png",
-            RequiredRole = ModulynAuthRole.Admin
+            RequiredRole = ModulynAuthRole.User,
+            RequiredGroup = ModulynSystemGroupNames.Admins
         };
 
         WebServerNavItem userMgr = new WebServerNavItem()
@@ -79,7 +80,8 @@
             NavItemName = "User Management",
             Target = "/usermanagement",
             Icon = "UserManagment.png",
-            RequiredRole = ModulynAuthRole.Admin
+            RequiredRole = ModulynAuthRole.User,
+            RequiredGroup = ModulynSystemGroupNames.Admins
         };
         userMgr.Parent = adminNav;
         adminNav.Children.Add(userMgr);
@@ -90,7 +92,8 @@
             NavItemName = "Group Management",
             Target = "/groupmanagement",
             Icon = "UserManagment.png",
-            RequiredRole = ModulynAuthRole.Admin
+            RequiredRole = ModulynAuthRole.User,
+            RequiredGroup = ModulynSystemGroupNames.Admins
         };
         groupMgr.Parent = adminNav;
         adminNav.Children.Add(groupMgr);
