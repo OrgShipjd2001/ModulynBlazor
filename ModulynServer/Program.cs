@@ -82,7 +82,7 @@ namespace Modulyn.Server
             // Authentication must always be configured, even if authentication is disabled
             builder.Services.AddSingleton<IAuthorizationHandler, ModulynAuthHandler>();
             builder.Services.AddSingleton<IAuthorizationPolicyProvider, ModulynAuthPolicyProvider>();
-            builder.Services.AddSingleton<IAuthorizationHandler, ModulynGroupAuthHandler>();
+            builder.Services.AddScoped<IAuthorizationHandler, ModulynGroupAuthHandler>();
             builder.Services.AddSingleton<IAuthorizationPolicyProvider, ModulynGroupAuthPolicyProvider>();
             builder.Services.AddScoped<IClaimsTransformation, GroupClaimsTransformation>();
             builder.Services.AddAuthorization(options =>
@@ -289,8 +289,6 @@ namespace Modulyn.Server
                 options.ForwardDefaultSelector = context =>
                 {
                     var authHeader = context.Request.Headers.Authorization.ToString();
-                    if (!string.IsNullOrWhiteSpace(authHeader) && authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-                        return RestApiAuthAttribute.SchemeName;
 
                     if (settings.IsAuthEnabled("HttpAuthHeader"))
                     {
@@ -305,6 +303,10 @@ namespace Modulyn.Server
                         if (context.Request.Headers.ContainsKey(userHeader))
                             return "HttpAuthHeader";
                     }
+
+                    if (authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                        return RestApiAuthAttribute.SchemeName;
+
                     return IdentityConstants.ApplicationScheme;
                 };
             })
