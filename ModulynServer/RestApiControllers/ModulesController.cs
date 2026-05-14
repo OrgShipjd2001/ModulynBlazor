@@ -7,7 +7,7 @@ using Modulyn.Server.Interface;
 
 namespace Modulyn.Server.RestApiControllers
 {
-    [RestApiAuth]
+    [Authorize]
     [ModulynGroupAuth(ModulynSystemGroupNames.PowerUsers)]
     [Route("api/[controller]")]
     [ApiController]

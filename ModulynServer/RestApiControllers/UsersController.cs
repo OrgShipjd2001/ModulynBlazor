@@ -10,7 +10,7 @@ using ModulynServer.model;
 
 namespace ModulynServer.RestApiControllers
 {
-    [RestApiAuth]
+    [Authorize]
     [ModulynGroupAuth(ModulynSystemGroupNames.Admins)]
     [ApiController]
     [Route("api/[controller]")]

@@ -88,7 +88,7 @@ namespace Modulyn.Server
             builder.Services.AddAuthorization(options =>
             {
                 options.DefaultPolicy = new AuthorizationPolicyBuilder()
-                    .AddAuthenticationSchemes(RestApiAuthAttribute.SchemeName)
+                    //.AddAuthenticationSchemes(RestApiAuthAttribute.SchemeName)
                     .RequireAuthenticatedUser()
                     .AddRequirements(new ModulynAuthRequirement())
                     .Build();
@@ -288,6 +288,10 @@ namespace Modulyn.Server
             {
                 options.ForwardDefaultSelector = context =>
                 {
+                    var authHeader = context.Request.Headers.Authorization.ToString();
+                    if (!string.IsNullOrWhiteSpace(authHeader) && authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                        return RestApiAuthAttribute.SchemeName;
+
                     if (settings.IsAuthEnabled("HttpAuthHeader"))
                     {
                         var provider = settings.GetAuthProvider("HttpAuthHeader");
@@ -306,7 +310,6 @@ namespace Modulyn.Server
             })
             .AddIdentityCookies();
 
-            // Add this separate call after AddIdentityCookies()
             builder.Services.AddAuthentication()
                 .AddScheme<AuthenticationSchemeOptions, PersonalAccessTokenAuthenticationHandler>(
                     RestApiAuthAttribute.SchemeName,
