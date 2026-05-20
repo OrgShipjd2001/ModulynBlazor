@@ -8,11 +8,11 @@ namespace ModulynServer.Handlers;
 
 public sealed class ModulynGroupAuthHandler : AuthorizationHandler<ModulynGroupAuthRequirement>
 {
-    private readonly ApplicationDbContext _db;
+    private readonly IDbContextFactory<ApplicationDbContext> _dbFactory;
 
-    public ModulynGroupAuthHandler(ApplicationDbContext db)
+    public ModulynGroupAuthHandler(IDbContextFactory<ApplicationDbContext> dbFactory)
     {
-        _db = db;
+        _dbFactory = dbFactory;
     }
 
     protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, ModulynGroupAuthRequirement requirement)
@@ -43,13 +43,15 @@ public sealed class ModulynGroupAuthHandler : AuthorizationHandler<ModulynGroupA
         ModulynGroupAuthRequirement requirement,
         HashSet<string> userGroups)
     {
+        await using var db = await _dbFactory.CreateDbContextAsync();
+
         if (userGroups.Contains(requirement.RequiredGroup))
         {
             context.Succeed(requirement);
             return;
         }
 
-        var requiredGroupId = await _db.Groups
+        var requiredGroupId = await db.Groups
             .AsNoTracking()
             .Where(g => g.Name == requirement.RequiredGroup)
             .Select(g => (Guid?)g.Id)
@@ -62,7 +64,7 @@ public sealed class ModulynGroupAuthHandler : AuthorizationHandler<ModulynGroupA
         }
 
         // Resolve required group and all of its transitive child groups.
-        var allowedGroupNames = await GetRequiredAndChildGroupNamesAsync(requiredGroupId.Value);
+        var allowedGroupNames = await GetRequiredAndChildGroupNamesAsync(db, requiredGroupId.Value);
 
         if (userGroups.Overlaps(allowedGroupNames))
         {
@@ -73,7 +75,7 @@ public sealed class ModulynGroupAuthHandler : AuthorizationHandler<ModulynGroupA
         context.Fail(new AuthorizationFailureReason(this, "Required group (or a required child group) is missing"));
     }
 
-    private async Task<HashSet<string>> GetRequiredAndChildGroupNamesAsync(Guid requiredGroupId)
+    private static async Task<HashSet<string>> GetRequiredAndChildGroupNamesAsync(ApplicationDbContext db, Guid requiredGroupId)
     {
         // Walk down the hierarchy: required group -> child groups -> ...
         var visited = new HashSet<Guid>();
@@ -85,7 +87,7 @@ public sealed class ModulynGroupAuthHandler : AuthorizationHandler<ModulynGroupA
         {
             var current = queue.Dequeue();
 
-            var childIds = await _db.GroupGroups
+            var childIds = await db.GroupGroups
                 .AsNoTracking()
                 .Where(gg => gg.ParentGroupId == current)
                 .Select(gg => gg.ChildGroupId)
@@ -98,7 +100,7 @@ public sealed class ModulynGroupAuthHandler : AuthorizationHandler<ModulynGroupA
             }
         }
 
-        var names = await _db.Groups
+        var names = await db.Groups
             .AsNoTracking()
             .Where(g => visited.Contains(g.Id))
             .Select(g => g.Name)
