@@ -82,7 +82,7 @@ namespace Modulyn.Server
             // Authentication must always be configured, even if authentication is disabled
             builder.Services.AddSingleton<IAuthorizationHandler, ModulynAuthHandler>();
             builder.Services.AddSingleton<IAuthorizationPolicyProvider, ModulynAuthPolicyProvider>();
-            builder.Services.AddScoped<IAuthorizationHandler, ModulynGroupAuthHandler>();
+            builder.Services.AddSingleton<IAuthorizationHandler, ModulynGroupAuthHandler>();
             builder.Services.AddSingleton<IAuthorizationPolicyProvider, ModulynGroupAuthPolicyProvider>();
             builder.Services.AddScoped<IClaimsTransformation, GroupClaimsTransformation>();
             builder.Services.AddAuthorization(options =>
@@ -323,8 +323,9 @@ namespace Modulyn.Server
             // NOTE: You can later swap "ApiBearer" to JwtBearer (external IdP) without changing controllers.
 
             var connectionString = settings.AuthDbConnectionString;
-            builder.Services.AddDbContext<ApplicationDbContext>(options =>
+            builder.Services.AddPooledDbContextFactory<ApplicationDbContext>(options =>
                 options.UseSqlServer(connectionString));
+            builder.Services.AddScoped(sp => sp.GetRequiredService<IDbContextFactory<ApplicationDbContext>>().CreateDbContext());
             builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
             builder.Services.AddIdentityCore<ApplicationUser>(
