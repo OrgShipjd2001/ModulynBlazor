@@ -460,11 +460,13 @@ namespace Modulyn.Server
 
                 // Seed default groups
                 var adminsGroup = await db.Groups.FirstOrDefaultAsync(g => g.Name == ModulynSystemGroupNames.Admins);
+                bool adminsGroupCreated = false;
                 if (adminsGroup == null)
                 {
                     adminsGroup = new ApplicationGroup { Name = ModulynSystemGroupNames.Admins, IsSystem = true };
                     db.Groups.Add(adminsGroup);
                     await db.SaveChangesAsync();
+                    adminsGroupCreated = true;
                 }
                 else if (!adminsGroup.IsSystem)
                 {
@@ -473,11 +475,13 @@ namespace Modulyn.Server
                 }
 
                 var powerUsersGroup = await db.Groups.FirstOrDefaultAsync(g => g.Name == ModulynSystemGroupNames.PowerUsers);
+                bool powerUsersGroupCreated = false;
                 if (powerUsersGroup == null)
                 {
                     powerUsersGroup = new ApplicationGroup { Name = ModulynSystemGroupNames.PowerUsers, IsSystem = true };
                     db.Groups.Add(powerUsersGroup);
                     await db.SaveChangesAsync();
+                    powerUsersGroupCreated = true;
                 }
                 else if (!powerUsersGroup.IsSystem)
                 {
@@ -486,16 +490,37 @@ namespace Modulyn.Server
                 }
 
                 var usersGroup = await db.Groups.FirstOrDefaultAsync(g => g.Name == ModulynSystemGroupNames.Users);
+                bool usersGroupCreated = false;
                 if (usersGroup == null)
                 {
                     usersGroup = new ApplicationGroup { Name = ModulynSystemGroupNames.Users, IsSystem = true };
                     db.Groups.Add(usersGroup);
                     await db.SaveChangesAsync();
+                    usersGroupCreated = true;
                 }
                 else if (!usersGroup.IsSystem)
                 {
                     usersGroup.IsSystem = true;
                     await db.SaveChangesAsync();
+                }
+
+                // On first creation only, initialize default group nesting:
+                // Admins ? PowerUsers ? Users
+                if (adminsGroupCreated || powerUsersGroupCreated || usersGroupCreated)
+                {
+                    bool adminsInPowerUsers = await db.GroupGroups.AnyAsync(gg => gg.ParentGroupId == powerUsersGroup.Id && gg.ChildGroupId == adminsGroup.Id);
+                    if (!adminsInPowerUsers)
+                    {
+                        db.GroupGroups.Add(new ApplicationGroupGroup { ParentGroupId = powerUsersGroup.Id, ChildGroupId = adminsGroup.Id });
+                        await db.SaveChangesAsync();
+                    }
+
+                    bool powerUsersInUsers = await db.GroupGroups.AnyAsync(gg => gg.ParentGroupId == usersGroup.Id && gg.ChildGroupId == powerUsersGroup.Id);
+                    if (!powerUsersInUsers)
+                    {
+                        db.GroupGroups.Add(new ApplicationGroupGroup { ParentGroupId = usersGroup.Id, ChildGroupId = powerUsersGroup.Id });
+                        await db.SaveChangesAsync();
+                    }
                 }
 
                 if (adminUser != null)
