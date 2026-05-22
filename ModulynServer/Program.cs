@@ -508,6 +508,8 @@ namespace Modulyn.Server
                     }
                 }
 
+                Dictionary<string, bool> createdGroups = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+                
                 // Ensure module-required groups exist
                 foreach (var module in moduleManager.GetModuleList())
                 {
@@ -526,6 +528,7 @@ namespace Modulyn.Server
                             .FirstOrDefaultAsync(g => g.Name.ToLower() == groupName.ToLower());
                         if (existing == null)
                         {
+                            createdGroups[groupName] = true;
                             db.Groups.Add(new ApplicationGroup { Name = groupName, IsSystem = true });
                             await db.SaveChangesAsync();
                         }
@@ -556,7 +559,7 @@ namespace Modulyn.Server
                         // If the module-defined parent group already exists, do not re-initialize its nesting.
                         // This prevents resetting plugin group configuration on each server start.
                         bool parentAlreadyExists = await db.Groups.AnyAsync(g => g.Name.ToLower() == parentName.ToLower());
-                        if (parentAlreadyExists)
+                        if ((parentAlreadyExists) && (!createdGroups.ContainsKey(parentName)))
                             continue;
 
                         var parent = await db.Groups
