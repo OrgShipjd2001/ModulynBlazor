@@ -22,7 +22,7 @@ echo ^<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd"
 echo ^<metadata^> >> %nuspecFile%
 echo ^<id^>Modulyn.Interface^</id^> >> %nuspecFile%
 echo ^<version^>%packVer%^</version^> >> %nuspecFile%
-echo ^<description^>A library containing the interfaces needed generate modules for the Modulyn Server^</description^> >> %nuspecFile%
+echo ^<description^>A library containing the interfaces needed to generate modules for the Modulyn Server^</description^> >> %nuspecFile%
 echo ^<authors^>Infinite Build^</authors^> >> %nuspecFile%
 echo ^<repository type="git" url="https://github.com/InfiniteBuild/ModulynBlazor.git" /^> >> %nuspecFile%
 echo ^<readme^>docs\ReadMe.md^</readme^> >> %nuspecFile%
@@ -38,7 +38,7 @@ echo ^</metadata^> >> %nuspecFile%
 echo ^<files^> >> %nuspecFile%
 
 echo ^<file src="%sourceDir%\ModulynInterface\**" target="lib\net10.0"/^> >> %nuspecFile%
-echo ^<file src="%nugetdir%\Data\ReadMe.md" target="docs\" /^> >> %nuspecFile%
+echo ^<file src="%nugetdir%\Data\interface\ReadMe.md" target="docs\" /^> >> %nuspecFile%
 echo ^<file src="%nugetdir%\Data\LICENSE.txt" target="" /^> >> %nuspecFile%
 echo ^<file src="%nugetdir%\Data\ModulynBlazor.jpg" target="images\" /^> >> %nuspecFile%
 

@@ -39,7 +39,7 @@ echo ^</metadata^> >> %nuspecFile%
 echo ^<files^> >> %nuspecFile%
 
 echo ^<file src="%sourceDir%\ModulynServer\**" target="content" /^> >> %nuspecFile%
-echo ^<file src="%nugetdir%\Data\ReadMe.md" target="docs\" /^> >> %nuspecFile%
+echo ^<file src="%nugetdir%\Data\websvr\ReadMe.md" target="docs\" /^> >> %nuspecFile%
 echo ^<file src="%nugetdir%\data\License.txt" target="" /^> >> %nuspecFile%
 echo ^<file src="%nugetdir%\data\ModulynBlazor.jpg" target="images\" /^> >> %nuspecFile%
 

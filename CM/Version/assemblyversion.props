@@ -1,8 +1,8 @@
 <Project>
   <PropertyGroup>
-    <Company>InifiniteBuild</Company>
+    <Company>Buildus Infinitus</Company>
     <Product>ModulynServer</Product>
-    <Version>0.3.0.0</Version>
-    <FileVersion>0.3.0.0</FileVersion>
+    <Version>0.0.0.0</Version>
+    <FileVersion>0.0.0.0</FileVersion>
   </PropertyGroup>
 </Project>
